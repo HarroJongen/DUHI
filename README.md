@@ -7,3 +7,4 @@ Python packages:
 -xlrd
 -inspect
 -os
+-glob
