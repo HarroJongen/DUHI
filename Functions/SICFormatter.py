@@ -1,7 +1,7 @@
 #Title: Summer in the City data format function
 #Date: 30-06-2020
 #Author: Harro Jongen
-#Downloads Formats data of summer in the city project from multiple sheet excel file to csv
+#Formats data of summer in the city project from multiple sheet excel file to csv
 
 def SICFormatter(start, end, file = "Data/5G0D2194(5G0D2194)-1554817879612.xlsx"):
     import pandas as pd
