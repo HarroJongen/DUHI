@@ -4,8 +4,8 @@
 #Formats data of WOW-nl to csv
 
 def WOWFormatter(city, start, end, file = "Data/export_916696001.csv"):
-    file = "Data/export_916696001.csv"
     import pandas as pd
+    import numpy as np
     
     #Read WOW file
     df = pd.read_csv(file, delimiter = ';')
@@ -15,12 +15,15 @@ def WOWFormatter(city, start, end, file = "Data/export_916696001.csv"):
     df['date'] = pd.to_datetime(df['datum'], format='%Y-%m-%dT%H:%M:%S')
     
     #Rename columns
-    df.rename({'temperatuur (C) [916696001]' : 'T_rural (C)', 'neerslagintensiteit (mm/uur) [916696001]' : 'P_rural (mm/h)', 'windsnelheid (m/s) [916696001]' : 'u_rural (m/s)', 'relatieve vochtigheid  (%) [916696001]' : 'RH_rural (%)', 'luchtdruk (hPa) [916696001]' : 'p_rural (hPa)'}, axis = 1, inplace = True)
+    df.rename({'temperatuur (C) [916696001]' : 'T_rural', 'neerslagintensiteit (mm/uur) [916696001]' : 'P_rural', 'windsnelheid (m/s) [916696001]' : 'u_rural', 'relatieve vochtigheid  (%) [916696001]' : 'RH_rural', 'luchtdruk (hPa) [916696001]' : 'p_rural'}, axis = 1, inplace = True)
     
     #Select period
     df = df[(df['date'] > start) &(df['date'] < end)]
     
+    #Replace - with NA
+    df = df.replace('-',np.NaN)
+    
     #Write to csv file
     filepath = 'Data/' + city + '_rural.csv'
-    df.to_csv(filepath, columns = (['date', 'T_rural (C)', 'u_rural (m/s)', 'P_rural (mm/h)', 'p_rural (hPa)', 'RH_rural (%)']), index = False)
+    df.to_csv(filepath, columns = (['date', 'T_rural', 'u_rural', 'P_rural', 'p_rural', 'RH_rural']), index = False)
         
