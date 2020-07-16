@@ -3,7 +3,7 @@
 #Author: Harro Jongen
 #Formats data of summer in the city project from multiple sheet excel file to csv
 
-def SICFormatter(start, end, file = "Data/5G0D2194(5G0D2194)-1554817879612.xlsx"):
+def SICFormatter(start, end, file):
     import pandas as pd
     import numpy as np
     
