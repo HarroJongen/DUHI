@@ -8,10 +8,9 @@ def UrbanRuralCombiner():
     import re
     import pandas as pd
     #Initialize empty dataframe for rural and urban station combinations
-    Locations = pd.DataFrame(columns = ['City', 'UrbanFile', 'RuralFile'])
+    Locations = pd.DataFrame(columns = ['City', 'UrbanFile', 'RuralFile', 'TotalFile'])
     #Read all filenames for rural and urban sites
     UrbanFiles = glob.glob('Data/*_urban.csv')
-    RuralFiles = glob.glob('Data/*_rural.csv')
     
     #Create regular expression to scan filenames for city names
     regex_city = re.compile(r'Data\\([A-Za-z]+)_\w+.csv')
@@ -20,7 +19,8 @@ def UrbanRuralCombiner():
         UrbanFile = UrbanFiles[item]
         City = regex_city.findall(UrbanFiles[item])
         RuralFile = 'Data\\' + City[0] + '_rural.csv'
-        Locations.loc[item] = [City[0]] + [UrbanFile] + [RuralFile]
+        TotalFile = UrbanFiles[item][0:-9] + 'total.csv'
+        Locations.loc[item] = [City[0]] + [UrbanFile] + [RuralFile] + [TotalFile]
     
     #Write dataframe to csv
     Locations.to_csv('Data\\UrbanRuralCombinations.csv', index = False)
