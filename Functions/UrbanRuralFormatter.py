@@ -5,6 +5,7 @@
 
 def UrbanRuralFormatter(City, urbanfile, ruralfile):
     import pandas as pd
+    import datetime
     
     #Read urban and rural file
     Urban = pd.read_csv(urbanfile)
@@ -14,30 +15,15 @@ def UrbanRuralFormatter(City, urbanfile, ruralfile):
     Urban['date'] = pd.to_datetime(Urban['date'])
     Rural['date'] = pd.to_datetime(Rural['date'])
     
-    
-    #Calculate timestep
-    Urban_dt = Urban['date'][1] - Urban['date'][0]
-    Rural_dt = Rural['date'][1] - Rural['date'][0]
-    
     #Set date as index
     Urban.set_index('date', inplace=True)
     Rural.set_index('date', inplace=True)
     
-    
-    #Check if timestep are equal
-    if Urban_dt == Rural_dt:
-        #Combine stations
-        Total = Urban.join(Rural, how = 'outer')
-    #Else resample data to largest timestep
-    else:
-        if Rural_dt < Urban_dt:
-            Rural_res =  Rural.resample(Urban_dt).mean()
-            #Combine stations
-            Total = Urban.join(Rural_res, how = 'outer')
-        else:
-            Urban_res =  Urban.resample(Rural_dt).mean()
-            #Combine stations
-            Total = Urban_res.join(Rural, how = 'outer')
+    #Resample data to hourly timestep
+    Urban_res = Urban.resample(datetime.timedelta(1/24)).mean()
+    Rural_res = Rural.resample(datetime.timedelta(1/24)).mean()
+    #Combine stations
+    Total = Urban_res.join(Rural_res, how = 'outer')
     
     #Add UHI column
     Total['UHI'] = Total['T_urban'] - Total['T_rural']
