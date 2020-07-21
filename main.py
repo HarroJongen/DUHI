@@ -20,10 +20,11 @@ end = datetime.datetime(2018 , 12, 31)
 ###FORMATTING DATA###
 
 #Select period and format Amsterdata from Summer in the City to project's format
-SICFormatter.SICFormatter(start, end, file = "Data/5G0D2194(5G0D2194)-1554817879612.xlsx")
+SICFormatter.SICFormatter(start, end, file = "Data/Amsterdam/5G0D2194(5G0D2194)-1554817879612.xlsx")
 
 #Format WOW-NL data
-WOWFormatter.WOWFormatter('Amsterdam', start, end , file = "Data/Amsterdam/export_916696001.csv")
+WOWFormatter.WOWFormatter('Amsterdam', '916696001', start, end , file = "Data/Amsterdam/export_916696001.csv", rural=True)
+WOWFormatter.WOWFormatter('Rotterdam', '915096001', start, end , file = "Data/Rotterdam/Rural/export_915096001.csv", rural=True)
     
 #Format Rotterdam data
 Files = glob.glob('Data/Rotterdam/*.csv')
@@ -46,7 +47,7 @@ for file in Combinations['TotalFile']:
 ###ANALYSIS###
 
 
-
+    
 
 
 ###VISUALIZATION###
