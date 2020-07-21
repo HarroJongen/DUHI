@@ -31,6 +31,7 @@ def DailyBuilder(file, k_API = 0.85):
     df_sum = df.resample(dt).sum()
     df_sum = df_sum.rename(columns = {'UHI' : 'UHI_int'})
     
+    #API calculation
     #For both urban and rural
     for item in ['P_urban', 'P_rural']:
         #Check for precipitation data
