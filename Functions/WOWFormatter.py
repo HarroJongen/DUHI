@@ -3,32 +3,41 @@
 #Author: Harro Jongen
 #Formats data of WOW-nl to csv
 
-def WOWFormatter(city, start, end, file, rural = True):
+def WOWFormatter(city, station, start, end, file, rural = True, overwrite = True):
     import pandas as pd
     import numpy as np
-    
-    #Read WOW file
-    df = pd.read_csv(file, delimiter = ';')
+    import os.path
     
     #Set right suffix for location
     if rural:
         Loc = 'rural'
     else:
         Loc = 'urban'
-    
-    #Convert dates to datetime format
-    df['date'] = pd.to_datetime(df['datum'], format='%Y-%m-%dT%H:%M:%S')
-    
-    #Rename columns
-    df.rename({'temperatuur (C) [916696001]' : 'T_' + Loc, 'neerslagintensiteit (mm/uur) [916696001]' : 'P_' + Loc, 'windsnelheid (m/s) [916696001]' : 'u_' + Loc, 'relatieve vochtigheid  (%) [916696001]' : 'RH_' + Loc, 'luchtdruk (hPa) [916696001]' : 'p_' + Loc}, axis = 1, inplace = True)
-    
-    #Select period
-    df = df[(df['date'] > start) &(df['date'] < end)]
-    
-    #Replace - with NA
-    df = df.replace('-',np.NaN)
-    
-    #Write to csv file
-    filepath = 'Data/' + city + '_' + Loc + '.csv'
-    df.to_csv(filepath, columns = (['date', 'T_rural', 'u_rural', 'P_rural', 'p_rural', 'RH_rural']), index = False)
         
+    #Define saving filename
+    filepath = 'Data/' + city + '_' + Loc + '.csv'
+    #Check whether file does not exists or whether it should be overwritten
+    if overwrite or not os.path.isfile(filepath):
+        
+        #Read WOW file
+        df = pd.read_csv(file, delimiter = ';')
+                
+        #Convert dates to datetime format
+        df['date'] = pd.to_datetime(df['datum'], format='%Y-%m-%dT%H:%M:%S')
+        
+        #Rename columns
+        df.rename({'temperatuur (C) ['+ station +']' : 'T_' + Loc, 'neerslagintensiteit (mm/uur) ['+ station +']' : 'P_' + Loc, 'windsnelheid (m/s) ['+ station +']' : 'u_' + Loc, 'relatieve vochtigheid  (%) ['+ station +']' : 'RH_' + Loc, 'luchtdruk (hPa) ['+ station +']' : 'p_' + Loc}, axis = 1, inplace = True)
+        
+        #Select period
+        df = df[(df['date'] > start) &(df['date'] < end)]
+        
+        #Check if data is available in given period
+        if len(df) == 0 :
+            print('No data available between ' + str(start) + ' and ' + str(end) + ' for ' + Loc + ' WOW location of ' + city)
+        else:
+            #Replace - with NA
+            df = df.replace('-',np.NaN)
+            
+            #Write to csv file
+            df.to_csv(filepath, columns = (['date', 'T_rural', 'u_rural', 'P_rural', 'p_rural', 'RH_rural']), index = False)
+                
