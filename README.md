@@ -8,3 +8,4 @@ Python packages:
 -inspect
 -os
 -glob
+-rasterio
