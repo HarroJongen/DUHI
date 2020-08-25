@@ -3,12 +3,14 @@
 #Author: Harro Jongen
 #Resamples the data set to daily calculating variables API, T_max, UHI_max and DTR
 
-def DailyBuilder(file, k_API = 0.85):
+def DailyBuilder(file, k_API = [0.85]):
     import pandas as pd
     import datetime
     from Functions import DTRCalculator
     import numpy as np
-        
+    
+    print('Creating daily dataset for ' + file)
+    
     #Read csv to dataframe
     df = pd.read_csv(file)
      #Set date to datetime format and make it index
@@ -32,31 +34,31 @@ def DailyBuilder(file, k_API = 0.85):
     df_sum = df_sum.rename(columns = {'UHI' : 'UHI_int'})
     
     #API calculation
-    #For both urban and rural
-    for item in ['P_urban', 'P_rural']:
-        #Check for precipitation data
-        if item in df.columns:
-            #Create API column
-            col = 'API' + item[-6:]
-            df_sum[col] = np.nan
-            #Calculate API based on formula: API_{d} = P_{d} + kP_{d-1} + k^{2}P_{d-2}+... upto 20 days
-            for row in range(len(df_sum)):
-                #Adapt formula to limited data for days before (at start of file)
-                if row < 20:
-                    df_sum[col][row] = 0
-                    for number in range(row+1):
-                        df_sum[col][row] += k_API**number * df_sum[item][row-number]
-                else:
-                    df_sum[col][row] = 0
-                    for number in range(20):
-                        df_sum[col][row] += k_API**number * df_sum[item][row-number]
+    cols = []
+    #For all k_API
+    for k in k_API:
+        #For both urban and rural
+        for item in ['P_urban', 'P_rural']:
+            #Check for precipitation data
+            if item in df.columns:
+                #Create API column
+                col = 'API' + str(k) + item[-6:]
+                cols += [col]
+                df_sum[col] = np.nan
+                #Calculate API based on formula: API_{d} = P_{d} + kP_{d-1} + k^{2}P_{d-2}+... upto 20 days
+                for row in range(len(df_sum)):
+                    #Adapt formula to limited data for days before (at start of file)
+                    if row > 20:
+                        df_sum[col][row] = 0
+                        for number in range(20):
+                            df_sum[col][row] += k**number * df_sum[item][row-number]
     
     #Remove unnessary data and add all available variables to one dataframe
     df_daily = df_daily.drop(columns = ['u_urban', 'RH_urban', 'u_rural', 'P_rural', 'p_rural', 'RH_rural'])
     df_daily['DTR_urban'] = df_range['DTR_urban']
     df_daily['DTR_rural'] = df_range['DTR_rural']
     df_daily['UHI_int'] = df_sum['UHI_int']
-    for key in ['API_rural', 'API_urban']:
+    for key in cols:
         if key in df_sum.columns:
             df_daily[key] = df_sum[key]
     
