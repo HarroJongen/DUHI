@@ -7,6 +7,8 @@ def UrbanRuralFormatter(City, urbanfile, ruralfile):
     import pandas as pd
     import datetime
     
+    print('Combining files ' + urbanfile + ' and ' + ruralfile)
+    
     #Read urban and rural file
     Urban = pd.read_csv(urbanfile)
     Rural = pd.read_csv(ruralfile)
