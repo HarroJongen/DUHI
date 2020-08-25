@@ -35,6 +35,8 @@ def RdamFormatter(start, end, file, overwrite = True):
         #Check if data is available in given period
         if len(df) == 0 :
             print('No data available between ' + str(start) + ' and ' + str(end) + ' for Rotterdam location ' + file[15:-4])
+            if os.path.isfile(filepath):
+                os.remove(filepath)
         else:
             #Calculate rainfall intensity
             dt = df['date'][1] - df['date'][0]
