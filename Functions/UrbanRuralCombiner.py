@@ -16,7 +16,7 @@ def UrbanRuralCombiner():
     
     #Create regular expression to scan filenames for city names
     regex_city = re.compile(r'Data\\([A-Za-z]+)_\w+.csv')
-    regex_loc = re.compile(r'Data\\\w+_([A-Za-z0-9]+)_\w+.csv')
+    regex_loc = re.compile('Data\\\\\w+?_([_A-Za-z0-9]+)_\w+?.csv')
     
     #For every urban file
     for item in range(len(UrbanFiles)):
