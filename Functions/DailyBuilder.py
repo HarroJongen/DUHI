@@ -48,7 +48,7 @@ def DailyBuilder(file, k_API = [0.85]):
                 #Calculate API based on formula: API_{d} = P_{d} + kP_{d-1} + k^{2}P_{d-2}+... upto 20 days
                 for row in range(len(df_sum)):
                     #Adapt formula to limited data for days before (at start of file)
-                    if row > 20:
+                    if row > 19:
                         df_sum[col][row] = 0
                         for number in range(20):
                             df_sum[col][row] += k**number * df_sum[item][row-number]
