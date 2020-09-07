@@ -3,7 +3,7 @@
 #Author: Harro Jongen
 #Formats data of Rotterdam to csv
 
-def RdamFormatter(start, end, file, overwrite = True):
+def FormatterRdam(start, end, file, overwrite = True):
     import pandas as pd
     import datetime
     import os.path
@@ -29,7 +29,7 @@ def RdamFormatter(start, end, file, overwrite = True):
         df.rename({'Tair_{Avg}' : 'T_urban', 'WindSpd_{Avg}' : 'u_urban', 'RH_{Avg}' : 'RH_urban'}, axis = 1, inplace = True)
         
         #Select period
-        df = df[(df['date'] > start) &(df['date'] < end)]
+        df = df[(df['date'] >= start) &(df['date'] <= end)]
         df = df.reset_index()
         
         #Check if data is available in given period

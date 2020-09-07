@@ -3,7 +3,7 @@
 #Author: Harro Jongen
 #Formats data of WOW-nl to csv
 
-def WOWFormatter(city, station, start, end, file, rural = True, overwrite = True):
+def FormatterWOW(city, station, start, end, file, rural = True, overwrite = True):
     import pandas as pd
     import numpy as np
     import os.path
@@ -32,7 +32,7 @@ def WOWFormatter(city, station, start, end, file, rural = True, overwrite = True
         df.rename({'temperatuur (C) ['+ station +']' : 'T_' + Loc, 'neerslagintensiteit (mm/uur) ['+ station +']' : 'P_' + Loc, 'windsnelheid (m/s) ['+ station +']' : 'u_' + Loc, 'relatieve vochtigheid  (%) ['+ station +']' : 'RH_' + Loc, 'luchtdruk (hPa) ['+ station +']' : 'p_' + Loc}, axis = 1, inplace = True)
         
         #Select period
-        df = df[(df['date'] > start) &(df['date'] < end)]
+        df = df[(df['date'] >= start) &(df['date'] <= end)]
         
         #Check if data is available in given period
         if len(df) == 0 :

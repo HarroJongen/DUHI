@@ -3,9 +3,10 @@
 #Author: Harro Jongen
 #Formats the Veenkampen data into a single soil moisture timeseries
 
-def VeenkampenFormatter(start, end):
+def FormatterVeenkampen(start, end):
     import pandas as pd
     import urllib.request
+    import os
     
     #Create dataframe for timeseries including all dates
     df = pd.DataFrame(columns = ['date'])
@@ -25,19 +26,21 @@ def VeenkampenFormatter(start, end):
         try:
             #Download one day of data
             urllib.request.urlretrieve(url, filepath)
-            #Create dataframe of daily data
+        except:
+            print('No file available for ' + str(date) + ' at given url')
+        #Create dataframe of daily data
+        if os.path.exists('Data/temp.txt'):
             df_day = pd.read_csv(filepath, header=None)
             df_day['date'] = pd.to_datetime(df_day[0])
             df_day = df_day.set_index('date')
             os.remove(filepath)
             
-            #Calculate average of days
-            df_day = df_day.groupby(df_day.index).mean()
-            
-            #Fill daily values into total dataframe
-            df = df.combine_first(df_day)
-        except:
-            print('No file available for ' + str(date) + ' at given url')
+        #Calculate average of days
+        df_day = df_day.groupby(df_day.index).mean()
+        
+        #Fill daily values into total dataframe
+        df = df.combine_first(df_day)
+
         
 
         

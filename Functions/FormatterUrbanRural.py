@@ -3,7 +3,7 @@
 #Author: Harro Jongen
 #Downloads Combines data of rural and urban meteorological station for analysis
 
-def UrbanRuralFormatter(City, urbanfile, ruralfile):
+def FormatterUrbanRural(City, urbanfile, ruralfile):
     import pandas as pd
     import datetime
     

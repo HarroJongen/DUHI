@@ -3,7 +3,7 @@
 #Author: Harro Jongen
 #Formats data of Mocca to csv
 
-def MoccaFormatter(start, end, overwrite = True):
+def FormatterMocca(start, end, overwrite = True):
     import pandas as pd
     import os.path
     import glob
@@ -25,7 +25,7 @@ def MoccaFormatter(start, end, overwrite = True):
         #Check whether file does not exists or whether it should be overwritten
         if overwrite or not os.path.isfile(filepath):
             #Create dataframe for timeseries including all timestamps
-            df = pd.DataFrame(columns = ['date', 'T_' + land, 'u_' + land, 'P_' + land, 'RH_' + land])
+            df = pd.DataFrame(columns = ['date', 'T_' + land, 'RH_' + land, 'u_' + land, 'P_' + land])
             df['date'] = pd.date_range(start, end, freq='H')
             df.set_index('date', inplace=True)
             df = df.resample('H').sum()
@@ -33,11 +33,13 @@ def MoccaFormatter(start, end, overwrite = True):
             
             #For every date
             Timeline =  pd.date_range(start, end, freq='M')
+            if len(Timeline) == 0:
+                Timeline = df.index[0:1]
             for month, year in zip(Timeline.strftime('%m'), Timeline.year):
                 print('Extracting values for ' + str(month) + '-' + str(year))
                 
                 #Define filepaths
-                Files = glob.glob('Data/Gent/' + str(year) + '/' + str(month) + '/' + '*_' + loc + '.dat')
+                Files = glob.glob('Data/Cities/Gent/' + str(year) + '/' + str(month) + '/' + '*_' + loc + '.dat')
                 
                 #For every file
                 for file in Files:

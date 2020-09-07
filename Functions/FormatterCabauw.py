@@ -3,7 +3,7 @@
 #Author: Harro Jongen
 #Formats the Cabauw data into a single soil moisture timeseries
 
-def CabauwFormatter(folderpath, start, end):
+def FormatterCabauw(folderpath, start, end):
     import pandas as pd
     import numpy as np
     import os.path

@@ -3,13 +3,16 @@
 #Author: Harro Jongen
 #Formats data of summer in the city project from multiple sheet excel file to csv
 
-def SICFormatter(start, end, file, overwrite = True):
+def FormatterSIC(start, end, file, overwrite = True):
     import pandas as pd
     import numpy as np
     import os.path
+    import pickle
     
-    #Read excel file and write to a dictionairy
-    dfs = pd.read_excel(file, sheet_name = None)
+    #Read pickle file as dictionairy
+    infile = open(file,'rb')
+    dfs = pickle.load(infile)
+    infile.close()
     
     #Per station
     for item in dfs.items():
@@ -28,7 +31,7 @@ def SICFormatter(start, end, file, overwrite = True):
             df.rename({'T' : 'T_urban', 'u' : 'u_urban', 'h' : 'RH_urban'}, axis = 1, inplace = True)
             
             #Select period
-            df = df[(df['date'] > start) &(df['date'] < end)]
+            df = df[(df['date'] >= start) &(df['date'] <= end)]
             
             #Check if data is available in given period
             if len(df) == 0 :
