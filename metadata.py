@@ -28,7 +28,7 @@ for item in range(len(gdf)):
 #%%
 #LCZ
 #Read LCZ raster data
-with rasterio.open('Data/LCZ/LCZ_Netherlands_lcz2_clip.tif') as src:
+with rasterio.open('Data/Maps/LCZ_Netherlands_lcz2_clip.tif') as src:
     LCZ = src.read(1)
     
     #For every location
@@ -42,8 +42,8 @@ with rasterio.open('Data/LCZ/LCZ_Netherlands_lcz2_clip.tif') as src:
 #%%
 #Populations statistics
 #Read shapefile with populaiton statistics 100m square
-PopStat100 = gpd.read_file('Data/Population/CBS_VK100_2018_v1.shp')
-PopStat100 = PopStat.replace(-99997,np.NaN)
+PopStat100 = gpd.read_file('Data/Maps/Population/CBS_VK100_2018_v1.shp')
+PopStat100 = PopStat100.replace(-99997,np.NaN)
 #If coordinate reference systems are equal
 if PopStat100.crs == gdf.crs:
     #Join attributes of the population statistics to the points of the measurement stations
@@ -66,7 +66,7 @@ if PopStat500.crs == gdf.crs:
 #%%
 #Soil
 #Read shapefile and tables
-Soil = gpd.read_file('Data/Soil/Soil_map.shp')
+Soil = gpd.read_file('Data/Maps/Soil/Soil_map.shp')
 Soil = Soil.rename(columns={'map_area_i': 'map_area_id'})
 Soil_info = pd.read_csv('Data/Soil/Soil_info.txt')
 Soil_codes = pd.read_csv('Data/Soil/Soil_codes.txt')
@@ -77,14 +77,14 @@ Soil = Soil.set_index('soil_unit_code').join(Soil_codes.set_index('code'))
 
 #If coordinate reference systems are equal
 if Soil.crs == gdf.crs:
-    #Join attributes of the soilo map to the points of the measurement stations
+    #Join attributes of the soil map to the points of the measurement stations
     join = gpd.sjoin(gdf, Soil, how="left", op="within")
     df.loc[df['City'] != 'Gent', 'Soil'] = join.loc[join['City'] != 'Gent', 'main_soil_classification']
     
 #%%Seepage
 
 #Read LCZ raster data
-with rasterio.open('Data/KEA/Seepage.tif') as src:
+with rasterio.open('Data/Maps/KEA/Seepage.tif') as src:
     Seepage = src.read(1)
     
     #For every location
@@ -99,13 +99,43 @@ with rasterio.open('Data/KEA/Seepage.tif') as src:
 #%%
 #Sealed fraction
 
-Sealed = gpd.read_file('Data/KEA/groen.gdb',layer='buurt_groen_water_nodata')
+Sealed = gpd.read_file('Data/Maps/KEA/groen.gdb',layer='buurt_groen_water_nodata')
 #If coordinate reference systems are equal
 if Sealed.crs == gdf.crs:
-    #Join attributes of the soilo map to the points of the measurement stations
+    #Join attributes of the sealed fraction map to the points of the measurement stations
     join = gpd.sjoin(gdf, Sealed, how="left", op="within")
     df.loc[df['City'] != 'Gent', 'P_sealed'] = join.loc[join['City'] != 'Gent', 'P_verhard']
     
+
+#%%
+#SVF
+Mapindex = gpd.read_file('Data/Maps/SVF/Kaartbladen.shp')
+
+if Mapindex.crs == gdf.crs:
+    #Join attributes of the svf map to the points of the measurement stations
+    join = gpd.sjoin(gdf, Mapindex, how="left", op="within")
+    ls = sorted(join['Kaartblad'].unique()[~pd.isnull(join['Kaartblad'].unique())])
+    
+    print('Download and put in the folder Data/Maps/SVF the SVF data from https://dataplatform.knmi.nl/catalog/datasets/index.html?x-dataset=SVF_NL&x-dataset-version=3 for the mapindices: ')
+    print(*ls, sep = "\t")
+    
+    download = input("Have you downloaded all files? [y/n] ")
+    while download != 'y':
+        download = input("Have you downloaded all files? [y/n] ")
+    for item in range(len(df)):
+        try:
+            if np.isnan(df.iloc[item]['SVF']) and ~np.isnan(df.iloc[item]['Lat_urban']) and df.iloc[item]['City'] != 'Gent':
+                with rasterio.open('Data/Maps/SVF/SVF_r'+ join['Kaartblad'][item] +'.tif') as src:
+                    SVF = src.read(1)
+                    #Determine the corresponding row and column in raster
+                    row, col = src.index(gdf.iloc[item]['RD_Lon_urban'], gdf.iloc[item]['RD_Lat_urban'])
+                    df.at[item, 'SVF'] = SVF[row, col]
+        except:
+            print('Data/Maps/SVF/SVF_r'+ join['Kaartblad'][item] +'.tif is not available.')
+        
+        
+df.loc[df['SVF']>1, 'SVF'] = df.loc[df['SVF']>1, 'SVF'] / 100
+
 #%%
 #Save update metadata
 df.to_csv('Data/Metadata/Locations.csv', index=False)
@@ -118,8 +148,10 @@ gdf.to_csv('Data/Metadata/Locations_rd.csv', index=False)
 
 #Make a map of LCZ and locations
 fig, ax = plt.subplots(figsize=(10, 10))
+Mapindex.plot(ax=ax, color='blue')
+show(src)
 Soil.plot(ax=ax, color='blue')
-PopStat.plot(ax=ax, color='blue')
+PopStat100.plot(ax=ax, color='blue')
 gdf.plot(ax=ax, markersize=5, color='red')
 plt.show()
     
