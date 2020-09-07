@@ -3,7 +3,7 @@
 #Author: Harro Jongen
 #Script for validating remote sensing soil moisture data against in situ observations in Cabauw and Veenkampen
 
-
+#%%
 ###IMPORTING###
 
 import datetime
@@ -11,14 +11,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import math
     
-from Functions import SatelliteToTimeseries, CabauwFormatter, VeenkampenFormatter, ValStat
+from Functions import SatelliteToTimeseries, FormatterCabauw, FormatterVeenkampen, ValStat
 
+#%%
 ###SETTINGS###
 
 #Define period of interest
 start = datetime.datetime(2017, 1, 1)
 end = datetime.datetime(2018 , 12, 31)
 
+#%%
 ###FORMATTING DATA###
 
 #Create soil moisture time series for validation
@@ -26,8 +28,8 @@ SatelliteToTimeseries.SatelliteToTimeseries('Cabauw', 	(51.969, 4.926), start, e
 SatelliteToTimeseries.SatelliteToTimeseries('Veenkampen', (51.981, 5.620), start, end)
 
 #Soil moisture time series from Veenkampen en Cabauw
-CabauwFormatter.CabauwFormatter('Data/SoilMoisture/Cabauw/', start, end)
-VeenkampenFormatter.VeenkampenFormatter(start, end)
+FormatterCabauw.FormatterCabauw('Data/SoilMoisture/Cabauw/', start, end)
+FormatterVeenkampen.FormatterVeenkampen(start, end)
 
 
 #Read all data remote sensed (rs) and in situ (is), create date index and combine ber location
@@ -52,6 +54,7 @@ Veenk_is.set_index('date', inplace=True)
 
 Veenk_df = Veenk_rs.join(Veenk_is, how = 'outer')
 
+#%%
 ###VALIDATION###
 
 #Create dataframe for statistics
@@ -61,7 +64,7 @@ Stats = pd.DataFrame(columns=['loc', 'var', 'MSE', 'MSE_s', 'MSE_u', 'RMSE', 'RM
 Stats = ValStat.ValStat(Cabauw_df, 'sm', Stats, 'Cabauw')
 Stats = ValStat.ValStat(Veenk_df, 'sm', Stats, 'Veenkampen')
     
-
+#%%
 ###VISUALIZATION###
 
 #Determine dimensions of subplots
