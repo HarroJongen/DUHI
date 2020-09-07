@@ -9,224 +9,260 @@
 #Import packages
 print('Importing packages and functions')
 import datetime
-import pandas as pd
+import numpy as np
 import glob
-from geopy.geocoders import Nominatim
 import matplotlib.pyplot as plt
 import re
 import pickle
+from sklearn.linear_model import LinearRegression
 
 
 #Import functions
-from Functions import SICFormatter, MoccaFormatter, WOWFormatter, RdamFormatter, UrbanRuralCombiner, UrbanRuralFormatter, DailyBuilder, SatelliteToTimeseries
-
-#%%###SETTINGS DATA###
-print('Loading settings')
-
-#Define period of interest
-start = datetime.datetime(2019, 6, 1)
-end = datetime.datetime(2019, 8, 1) #end date should be one day after the last day of interest
-#Add 20 extra days foe API calculation
-start_analysis = start
-start = start - datetime.timedelta(days=20)
-
-#Give a name to the analysis, starting with Heatwave (periods can be found in the data folder), Yearly or Summer followed by the year
-name = 'Summer_2018'
-#Analyze name for properties
-regex = re.compile(r'([AaA-Za-z]+)_([0-9]+)')
-analysis = regex.search(name).group(1)
-time = regex.search(name).group(2)
-
+from Functions import BuilderData, Visualization
 
 #%%###FORMATTING DATA###
 
-#Format external data sources
-#Amsterdam data from Summer in the City
-print('Formatting data for Amsterdam')
-SICFormatter.SICFormatter(start, end, file = "Data/Amsterdam/5G0D2194(5G0D2194)-1554817879612.xlsx")
-#WOW-NL data
-print('Formatting data form WOW-NL')
-WOWFormatter.WOWFormatter('Amsterdam', '916696001', start, end , file = "Data/Amsterdam/export_916696001.csv", rural=True)
-WOWFormatter.WOWFormatter('Rotterdam', '915096001', start, end , file = "Data/Rotterdam/Rural/export_915096001.csv", rural=True)
-#Rotterdam data
-print('Formatting data for Rotterdam')
-Files = glob.glob('Data/Rotterdam/*.csv')
-for file in Files:
-    RdamFormatter.RdamFormatter(start, end, file)
-#Gent data
-print('Formatting data for Gent')
-MoccaFormatter.MoccaFormatter(start, end)
+#Define k_API
+k_API = [0.85]
 
+#All heatwave data
+BuilderData.BuilderData(start = datetime.datetime(2018, 7, 15), end = datetime.datetime(2018, 8, 7), data_periodtype = 'Heatwave', k_API = k_API)
+BuilderData.BuilderData(start = datetime.datetime(2019, 7, 22), end = datetime.datetime(2019, 7, 27), data_periodtype = 'Heatwave', k_API = k_API)
+BuilderData.BuilderData(start = datetime.datetime(2019, 8, 23), end = datetime.datetime(2019, 8, 28), data_periodtype = 'Heatwave', k_API = k_API)
 
-#Combine datasets for locations
-#Create csv with filepaths for rural and urban station combinations
-print('Combining rural and urban locations')
-UrbanRuralCombiner.UrbanRuralCombiner()
-Combinations = pd.read_csv('Data/UrbanRuralCombinations.csv')
-#Create combined datasets
-for item in range(len(Combinations)):
-    UrbanRuralFormatter.UrbanRuralFormatter(Combinations['City'][item], Combinations['UrbanFile'][item],\
-                                            Combinations['RuralFile'][item])
-        
-#Calculate metrics on daily basis
-print('Creating daily datasets')
-for file in Combinations['TotalFile']:
-    DailyBuilder.DailyBuilder(file, k_API = [0.85])
-    
-#Add remote sensed soil moisture
-#Create agent to retrieve coordinates
-geolocator = Nominatim(user_agent="DUHI")
-#For every city
-for city in Combinations['City'].unique():
-    print('Extracting satellite soil moisture data for ' + city)
-    #Define location
-    location = geolocator.geocode(city)
-    #Build remote soil moisture time series
-    SatelliteToTimeseries.SatelliteToTimeseries(city, (location.latitude, location.longitude), start, end)
-    #Read dataframe with soil moisture
-    sm_df = pd.read_csv('Data/' + city + '_rs_SoilMoisture.csv')
-    #For all locations of one city
-    Files = glob.glob('Data/'+ city +'*daily.csv')
-    for file in Files:
-        #Read file for location
-        df = pd.read_csv(file)
-        #Add soil moisture
-        df['sm'] = sm_df['sm']
-        df.to_csv(file, index=False)
+#All summer data
+BuilderData.BuilderData(start = datetime.datetime(2018, 7, 1), end = datetime.datetime(2018, 8, 31), data_periodtype = 'Summer', k_API = k_API)
+BuilderData.BuilderData(start = datetime.datetime(2019, 7, 1), end = datetime.datetime(2019, 8, 31), data_periodtype = 'Summer', k_API = k_API)
 
-#%%###SAVING DATA###
-
-#Load metadata and combinations
-Metadata = pd.read_csv('Data/Metadata/Locations.csv', index_col=0)
-Combinations = pd.read_csv('Data/UrbanRuralCombinations.csv')
-
-#Intitialize dictionaries and dataframes to contain all data ready for analysis
-dct_hour = {}
-dct_day = {}
-
-#For every location
-for loc, item in zip(Combinations['Location'], range(len(Combinations))):
-    #Build a dictionairy containg all locations as key and the hourly dataframe and format index
-    dct_hour[loc] = pd.read_csv(Combinations['TotalFile'][item])
-    dct_hour[loc]['date'] = pd.to_datetime(dct_hour[loc]['date'])
-    dct_hour[loc] = dct_hour[loc].set_index('date')
-    #Remove days used for API calculation
-    dct_hour[loc] = dct_hour[loc].loc[(dct_hour[loc].index >= start_analysis) & (dct_hour[loc].index <= end)]
-    #Add metadata
-    dct_hour[loc]['LCZ'] = Metadata.loc[Metadata['Locations'] == loc, 'LCZ'].values[0]
-    dct_hour[loc]['Inhabitants100'] = Metadata.loc[Metadata['Locations'] == loc, 'Inhabitants100'].values[0]
-    dct_hour[loc]['Popdens100'] = Metadata.loc[Metadata['Locations'] == loc, 'Popdens100'].values[0]
-    dct_hour[loc]['Inhabitants500'] = Metadata.loc[Metadata['Locations'] == loc, 'Inhabitants500'].values[0]
-    dct_hour[loc]['Popdens500'] = Metadata.loc[Metadata['Locations'] == loc, 'Popdens500'].values[0]
-    dct_hour[loc]['Seepage'] = Metadata.loc[Metadata['Locations'] == loc, 'Seepage'].values[0]
-    dct_hour[loc]['P_sealed'] = Metadata.loc[Metadata['Locations'] == loc, 'P_sealed'].values[0]
-    dct_hour[loc]['prof'] = Metadata.loc[Metadata['Locations'] == loc, 'prof'].values[0]
-
-    
-    #Build a dictionairy containg all locations as key and the daily dataframe and format index
-    dct_day[loc] = pd.read_csv(Combinations['DailyFile'][item])    
-    dct_day[loc]['date'] = pd.to_datetime(dct_day[loc]['date'])
-    dct_day[loc] = dct_day[loc].set_index('date')
-    #Remove days used for API calculation
-    dct_day[loc] = dct_day[loc].loc[(dct_day[loc].index >= start_analysis) & (dct_day[loc].index <= end)]
-    #Add metadata
-    dct_day[loc]['LCZ'] = Metadata.loc[Metadata['Locations'] == loc, 'LCZ'].values[0]
-    dct_day[loc]['Inhabitants100'] = Metadata.loc[Metadata['Locations'] == loc, 'Inhabitants100'].values[0]
-    dct_day[loc]['Popdens100'] = Metadata.loc[Metadata['Locations'] == loc, 'Popdens100'].values[0]
-    dct_day[loc]['Inhabitants500'] = Metadata.loc[Metadata['Locations'] == loc, 'Inhabitants500'].values[0]
-    dct_day[loc]['Popdens500'] = Metadata.loc[Metadata['Locations'] == loc, 'Popdens500'].values[0]
-    dct_day[loc]['Seepage'] = Metadata.loc[Metadata['Locations'] == loc, 'Seepage'].values[0]
-    dct_day[loc]['P_sealed'] = Metadata.loc[Metadata['Locations'] == loc, 'P_sealed'].values[0]
-    dct_day[loc]['prof'] = Metadata.loc[Metadata['Locations'] == loc, 'prof'].values[0]
-
-#Initialize dataframes with first location
-df_hour = dct_hour[list(dct_hour.keys())[0]]
-df_day = dct_day[list(dct_hour.keys())[0]]
-#For all other locations
-for loc in list(dct_hour.keys())[1:]:
-    #Add location to dataframes
-    df_hour = df_hour.append(dct_hour[loc])
-    df_day = df_day.append(dct_day[loc])
-
-#Save both the dictionaries and the dataframes in pickles
-for file, name in zip([df_day, df_hour, dct_day, dct_hour],['df_day', 'df_hour', 'dct_day', 'dct_hour']):
-    filename =  'Data/Preprocessed/' + name + '_' + analysis + '_' + \
-            str(start_analysis)[0:4] + str(start_analysis)[5:7] + str(start_analysis)[8:10] + \
-            '_'     + str(end)[0:4] + str(end)[5:7] + str(end)[8:10]
-    outfile = open(filename,'wb')
-    pickle.dump(file,outfile)
-    outfile.close()
+#All yearly data
+BuilderData.BuilderData(start = datetime.datetime(2018, 1, 1), end = datetime.datetime(2018, 12, 31), data_periodtype = 'Year', k_API = k_API)
+BuilderData.BuilderData(start = datetime.datetime(2019, 1, 1), end = datetime.datetime(2019, 12, 31), data_periodtype = 'Year', k_API = k_API)
 
 #%%###SETTINGS ANALYSIS###
+
+#Choose the dataset for analysis, options are:
+    #Heatwave (Selects all heatwaves available)
+    #Heatwave_2018 (Selects all heatwaves available from the specified year)
+    #Heatwave_20180715 (Selects heatwave starting at the specified date)
+    #Summer (Selects all summers available)
+    #Summer_2018 (Selects the summer from the specified year)
+    #Year (Selects all years available)
+    #Year_2018 (Selects the specified year)
+#Optional suffixes:
+    #_Subset (Followed by Heatwave, Summer or Year, adds extra dataframes as a subset for comparison)
+    
+analysis_name = 'Year_Subset_Heatwave'
+regex = re.compile(r'([A-Za-z]+)_?([0-9]*)_?S?u?b?s?e?t?_?([A-Za-z]*)_?([0-9]*)')
+analysis_periodtype = regex.search(analysis_name).group(1)
+analysis_date = regex.search(analysis_name).group(2)
+subset_periodtype = regex.search(analysis_name).group(3)
+
+
 
 #%%###LOADING DATA###
 
 #List all names of pickles available
 Pickles = glob.glob('Data/Preprocessed/*')
-infile = open(filename,'rb')
-new_dict = pickle.load(infile)
-infile.close()
 
+#Create empty dataframe for the dataset
+data = {}
 
+#Define regex item to find characteristics of saved data
+regex = re.compile(r'Data/Preprocessed\\df_([dh]+)_([A-Za-z]+)_([0-9]+)_[0-9]+')
+
+#For all preprocessed files
+for Pickle in Pickles:
+    #Open the pickle file
+    infile = open(Pickle,'rb')
+    #Define characteristics of the pickle file
+    res = regex.search(Pickle).group(1)
+    periodtype = regex.search(Pickle).group(2)
+    start_day = regex.search(Pickle).group(3)
+    
+    #Check if the file meets the analysis type
+    if analysis_periodtype == periodtype == 'Heatwave' and len(analysis_date) == 0:
+        #Heatwave
+        if 'df_' + res in data:
+            data['df_' + res] = data['df_' + res].append(pickle.load(infile)) 
+        else:
+            data['df_' + res] = pickle.load(infile)
+    elif analysis_periodtype == periodtype == 'Heatwave' and len(analysis_date) == 4 and start_day[0:4] == analysis_date:
+        #Heatwave_2018
+        if 'df_' + res in data:
+            data['df_' + res] = data['df_' + res].append(pickle.load(infile)) 
+        else:
+            data['df_' + res] = pickle.load(infile)
+    elif analysis_periodtype == periodtype == 'Heatwave' and len(analysis_date) == 8 and start_day == analysis_date:
+        #Heatwave_20180715
+        data['df_' + res] = pickle.load(infile)
+    elif (analysis_periodtype == periodtype == 'Summer' or analysis_periodtype == periodtype == 'Year') and len(analysis_date) == 0:
+        #Summer
+        if 'df_' + res in data:
+            data['df_' + res] = data['df_' + res].append(pickle.load(infile)) 
+        else:
+            data['df_' + res] = pickle.load(infile)
+    elif (analysis_periodtype == periodtype == 'Summer' or analysis_periodtype == periodtype == 'Year') and len(analysis_date) == 4 and start_day[0:4] == analysis_date:
+        #Summer_2018
+        data['df_' + res] = pickle.load(infile)
+        
+    if (subset_periodtype == periodtype == 'Summer' or subset_periodtype == periodtype == 'Heatwave') and len(analysis_date) == 0:
+        #Subset_Heatwave
+        if 'df_' + res + '_sub' in data:
+            data['df_' + res + '_sub'] = data['df_' + res + '_sub'].append(pickle.load(infile)) 
+        else:
+            data['df_' + res + '_sub'] = pickle.load(infile)
+    elif (subset_periodtype == periodtype == 'Summer' or subset_periodtype == periodtype == 'Heatwave') and len(analysis_date) == 4 and start_day[0:4] == analysis_date:
+        #Subset_Heatwave_2018
+        if 'df_' + res + '_sub' in data:
+            data['df_' + res + '_sub'] = data['df_' + res + '_sub'].append(pickle.load(infile))
+        else:
+            data['df_' + res + '_sub'] = pickle.load(infile)
+    elif len(subset_periodtype) != 0 and len(analysis_date) == 8:
+        print('No subset available for this type.')
+    infile.close()
+
+#Unpack datasets from dictionairy
+df_d = data['df_d']
+df_h = data['df_h']
+if len(subset_periodtype) != 0:
+    df_d_sub = data['df_d_sub']
+    df_h_sub = data['df_h_sub']
+
+#Give an analysis_date for titles later on
+if len(analysis_date) == 0:
+    analysis_date = 'All'
+    
 #%%###ANALYSIS###
 
+df_d['sm_cor'] = df_d['sm']-df_d['P_sealed']/100*df_d['sm']
 
 
-#For every location
-for loc in dct_day.keys():
-    df = dct_day[loc]
-    
-    
+df_d['Norm_loc'] = df_d['Norm']/(2-(1-df_d['P_sealed']/100)-df_d['SVF'])
+df_d['UHI_norm_loc'] = df_d['UHI_max']/df_d['Norm_loc']
+df_d['UHI_norm'] = df_d['UHI_max']/df_d['Norm']
+
+df_d_sub['Norm_loc'] = df_d_sub['Norm']/(2-(1-df_d_sub['P_sealed']/100)-df_d_sub['SVF'])
+df_d_sub['UHI_norm_loc'] = df_d_sub['UHI_max']/df_d_sub['Norm_loc']
+df_d_sub['UHI_norm'] = df_d_sub['UHI_max']/df_d_sub['Norm']
+
+
 #%%###VISUALIZATION###
 
 #Visualization total
 
-df_day.boxplot(column='UHI_max', by='LCZ')
-df_day.boxplot(column='UHI_int', by='LCZ')
-df_day.boxplot(column='T_max_urban', by='LCZ')
-df_day.boxplot(column='DTR_urban', by='LCZ')
+Visualization.Boxplot(cat='LCZ', dataframe=df_d, analysis_periodtype=analysis_periodtype, analysis_date=analysis_date)
+Visualization.Boxplot(cat='City', dataframe=df_d, analysis_periodtype=analysis_periodtype, analysis_date=analysis_date)
 
-df_day.boxplot(column='UHI_max', by='Seepage')
-df_day.boxplot(column='UHI_int', by='Seepage')
-df_day.boxplot(column='T_max_urban', by='Seepage')
-df_day.boxplot(column='DTR_urban', by='Seepage')
+fig, axes = plt.subplots(figsize=(20,10), nrows=2, ncols=2)
+axes[0,0].scatter(df_d['sm'], df_d['API0.8_rural'])
+mask = ~np.isnan(df_d['sm']) & ~np.isnan(df_d['API0.8_rural'])
+X = df_d[mask]['sm'].values.reshape(-1, 1)
+y = df_d[mask]['API0.8_rural'].values.reshape(-1,1)
+reg = LinearRegression()
+reg.fit(X,y)
+y_pred = reg.predict(np.array(np.arange(0, 1.1, 0.1)).reshape(-1,1))
+axes[0,0].plot(np.array(np.arange(0, 1.1, 0.1)).reshape(-1,1), y_pred, color='red')
+axes[0,0].set_ylabel('API (k = 0.80)')
 
-df_day['sm_cor'] = df_day['sm']-df_day['P_sealed']/100*df_day['sm']
-fig = plt.figure()
-ax = fig.add_subplot()
-ax.scatter(df_day['API0.85_rural'], df_day['DTR_urban'], c=df_day.index)
+
+axes[0,1].scatter(df_d['sm'], df_d['API0.85_rural'])
+mask = ~np.isnan(df_d['sm']) & ~np.isnan(df_d['API0.85_rural'])
+X = df_d[mask]['sm'].values.reshape(-1, 1)
+y = df_d[mask]['API0.85_rural'].values.reshape(-1,1)
+reg = LinearRegression()
+reg.fit(X,y)
+y_pred = reg.predict(np.array(np.arange(0, 1.1, 0.1)).reshape(-1,1))
+axes[0,1].plot(np.array(np.arange(0, 1.1, 0.1)).reshape(-1,1), y_pred, color='red')
+axes[0,1].set_ylabel('API (k = 0.85)')
+
+
+axes[1,0].scatter(df_d['sm'], df_d['API0.9_rural'])
+mask = ~np.isnan(df_d['sm']) & ~np.isnan(df_d['API0.9_rural'])
+X = df_d[mask]['sm'].values.reshape(-1, 1)
+y = df_d[mask]['API0.9_rural'].values.reshape(-1,1)
+reg = LinearRegression()
+reg.fit(X,y)
+y_pred = reg.predict(np.array(np.arange(0, 1.1, 0.1)).reshape(-1,1))
+axes[1,0].plot(np.array(np.arange(0, 1.1, 0.1)).reshape(-1,1), y_pred, color='red')
+axes[1,0].set_ylabel('API (k = 0.90)')
 fig.show()
 
 fig = plt.figure()
 ax = fig.add_subplot()
-ax.scatter(df_day['UHI_max'], df_day['API0.85_rural'], c = df_day['Popdens500'])
+ax.scatter(df_d['sm'], df_d['API0.85_rural'])
+mask = ~np.isnan(df_d['sm']) & ~np.isnan(df_d['API0.85_rural'])
+X = df_d[mask]['sm'].values.reshape(-1, 1)
+y = df_d[mask]['API0.85_rural'].values.reshape(-1,1)
+reg = LinearRegression()
+reg.fit(X,y)
+y_pred = reg.predict(np.array(np.arange(0, 1.1, 0.1)).reshape(-1,1))
+ax.plot(np.array(np.arange(0, 1.1, 0.1)).reshape(-1,1), y_pred, color='red')
+ax.set_ylabel('API (k = 0.85)')
+
+if 'df_d_sub' in globals():
+    Visualization.ScatterSubset(cat = 'UHI_max', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
+    Visualization.ScatterSubset(cat = 'UHI_int', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
+    Visualization.ScatterSubset(cat = 'UHI_norm', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
+    Visualization.ScatterSubset(cat = 'UHI_norm_loc', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
+    Visualization.ScatterSubset(cat = 'Norm_loc', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
+    Visualization.ScatterSubset(cat = 'DTR_urban', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
+    Visualization.ScatterSubset(cat = 'T_max_urban', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
+    
+    
+    
+    for loc in df_d['Location'].unique():
+        Visualization.ScatterSubsetSelect(cat = 'UHI_norm_loc', cat_select = 'Location', select=loc, dataframe=df_d, dataframe_sub=df_d_sub, analysis_name=analysis_name)
+    
+    
+    
+    Visualization.ScatterSubsetSelect(cat = 'UHI_norm_loc', cat_select = 'Location', select = '2236', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
+
+
+
+    Visualization.ScatterSubsetCity(cat1 = 'UHI_norm_loc', cat2 = 'sm', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
+
+
+
+fig = plt.figure()
+ax = fig.add_subplot()
+ax.scatter(df_d['sm'], df_d['API0.85_rural'], c = df_d['Seepage'], cmap='RdYlGn')
+ax.legend()
+fig.show()
+
+fig = plt.figure()
+ax = fig.add_subplot()
+ax.scatter(df_d['Norm'], df_d['UHI_max'])
+ax.legend()
+fig.show()
+
+fig = plt.figure()
+ax = fig.add_subplot()
+ax.scatter(df_d['UHI_max'], df_d['sm'], c = df_d['Seepage'])
 fig.show()
 
 #Visualization per location
 
 plot_count = 1
-fig_T = plt.figure()
+fig = plt.figure()
 
 #For every location
-for loc in dct_hour.keys():
-    df = dct_hour[loc]
-    ax = fig_T.add_subplot(3,3,plot_count)
+for Loc in df_h['Location'].unique():
+    df = df_h.loc[df_h['Location'] == Loc]
+    ax = fig.add_subplot(3,3,plot_count)
     ax.plot(df['T_urban'], color='red')
     ax.plot(df['T_rural'], color='green')
-    ax.set_title(loc + ', LCZ = ' + str(df['LCZ'][0]))
+    ax.set_title(Loc + ', LCZ = ' + str(df['LCZ'][0]))
     ax.set_ylabel('Temperature')
     ax.figure.autofmt_xdate()
     
-    
-    
+
     
     plt.setp(ax.get_xticklabels(), rotation=30, horizontalalignment='right')
     if plot_count == 9:
-        fig_T.tight_layout()
+        fig.tight_layout()
         plot_count = 1
-        fig_T = plt.figure()
+        fig = plt.figure()
     else:
         plot_count += 1
     
-fig_T.tight_layout()
-    
+fig.tight_layout()
