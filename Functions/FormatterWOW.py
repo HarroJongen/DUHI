@@ -3,19 +3,19 @@
 #Author: Harro Jongen
 #Formats data of WOW-nl to csv
 
-def FormatterWOW(city, station, start, end, file, rural = True, overwrite = True):
+def FormatterWOW(city, number, start, end, file, location, rural = True, overwrite = True):
     import pandas as pd
     import numpy as np
     import os.path
     import datetime
     
     #Set right suffix for location and define  saving filename
-    if rural:
+    if rural == True:
         Loc = 'rural'
         filepath = 'Data/' + city + '_' + Loc + '.csv'
     else:
         Loc = 'urban'
-        filepath = 'Data/' + city + '_' + station + '_' + Loc + '.csv'
+        filepath = 'Data/' + city + '_' + location + '_' + Loc + '.csv'
 
     #Check whether file does not exists or whether it should be overwritten
     if overwrite or not os.path.isfile(filepath):
@@ -29,7 +29,7 @@ def FormatterWOW(city, station, start, end, file, rural = True, overwrite = True
         df['date'] = df['date'] - datetime.timedelta(hours=2)
         
         #Rename columns
-        df.rename({'temperatuur (C) ['+ station +']' : 'T_' + Loc, 'neerslagintensiteit (mm/uur) ['+ station +']' : 'P_' + Loc, 'windsnelheid (m/s) ['+ station +']' : 'u_' + Loc, 'relatieve vochtigheid  (%) ['+ station +']' : 'RH_' + Loc, 'luchtdruk (hPa) ['+ station +']' : 'p_' + Loc}, axis = 1, inplace = True)
+        df.rename({'temperatuur (C) ['+ number +']' : 'T_' + Loc, 'neerslagintensiteit (mm/uur) ['+ number +']' : 'P_' + Loc, 'windsnelheid (m/s) ['+ number +']' : 'u_' + Loc, 'relatieve vochtigheid  (%) ['+ number +']' : 'RH_' + Loc, 'luchtdruk (hPa) ['+ number +']' : 'p_' + Loc}, axis = 1, inplace = True)
         
         #Select period
         df = df[(df['date'] >= start) &(df['date'] <= end)]
@@ -44,5 +44,5 @@ def FormatterWOW(city, station, start, end, file, rural = True, overwrite = True
             df = df.replace('-',np.NaN)
             
             #Write to csv file
-            df.to_csv(filepath, columns = (['date', 'T_rural', 'u_rural', 'P_rural', 'p_rural', 'RH_rural']), index = False)
+            df.to_csv(filepath, columns = (['date', 'T_' + Loc, 'u_' + Loc, 'P_' + Loc, 'p_' + Loc, 'RH_' + Loc]), index = False)
                 
