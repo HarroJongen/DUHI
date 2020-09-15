@@ -54,7 +54,7 @@ if PopStat100.crs == gdf.crs:
     df.loc[df['City'] != 'Gent', 'Popdens100'] = df.loc[df['City'] != 'Gent', 'Inhabitants100']/0.01
 
 #Read shapefile with populaiton statistics 500m square
-PopStat500 = gpd.read_file('Data/Population/CBS_VK500_2018_v1.shp')
+PopStat500 = gpd.read_file('Data/Maps/Population/CBS_VK500_2018_v1.shp')
 PopStat500 = PopStat500.replace(-99997,np.NaN)
 #If coordinate reference systems are equal
 if PopStat500.crs == gdf.crs:
@@ -68,8 +68,8 @@ if PopStat500.crs == gdf.crs:
 #Read shapefile and tables
 Soil = gpd.read_file('Data/Maps/Soil/Soil_map.shp')
 Soil = Soil.rename(columns={'map_area_i': 'map_area_id'})
-Soil_info = pd.read_csv('Data/Soil/Soil_info.txt')
-Soil_codes = pd.read_csv('Data/Soil/Soil_codes.txt')
+Soil_info = pd.read_csv('Data/Maps/Soil/Soil_info.txt')
+Soil_codes = pd.read_csv('Data/Maps/Soil/Soil_codes.txt')
 
 #Join tables to the shapefile
 Soil = Soil.set_index('map_area_id').join(Soil_info.set_index('map_area_id'))
@@ -79,11 +79,12 @@ Soil = Soil.set_index('soil_unit_code').join(Soil_codes.set_index('code'))
 if Soil.crs == gdf.crs:
     #Join attributes of the soil map to the points of the measurement stations
     join = gpd.sjoin(gdf, Soil, how="left", op="within")
+    join = join.drop_duplicates(subset = ['Locations', 'City'])
     df.loc[df['City'] != 'Gent', 'Soil'] = join.loc[join['City'] != 'Gent', 'main_soil_classification']
     
 #%%Seepage
 
-#Read LCZ raster data
+#Read seepage raster data
 with rasterio.open('Data/Maps/KEA/Seepage.tif') as src:
     Seepage = src.read(1)
     
@@ -99,12 +100,14 @@ with rasterio.open('Data/Maps/KEA/Seepage.tif') as src:
 #%%
 #Sealed fraction
 
-Sealed = gpd.read_file('Data/Maps/KEA/groen.gdb',layer='buurt_groen_water_nodata')
+Surface = gpd.read_file('Data/Maps/KEA/Neighbourhoods.shp')
 #If coordinate reference systems are equal
-if Sealed.crs == gdf.crs:
+if Surface.crs == gdf.crs:
     #Join attributes of the sealed fraction map to the points of the measurement stations
-    join = gpd.sjoin(gdf, Sealed, how="left", op="within")
+    join = gpd.sjoin(gdf, Surface, how="left", op="within")
     df.loc[df['City'] != 'Gent', 'P_sealed'] = join.loc[join['City'] != 'Gent', 'P_verhard']
+    df.loc[df['City'] != 'Gent', 'P_green'] = 100 - join.loc[join['City'] != 'Gent', 'P_verhard'] - join.loc[join['City'] != 'Gent', 'p_water']
+  
     
 
 #%%
@@ -151,6 +154,7 @@ fig, ax = plt.subplots(figsize=(10, 10))
 Mapindex.plot(ax=ax, color='blue')
 show(src)
 Soil.plot(ax=ax, color='blue')
+Surface.plot(ax=ax, color='blue')
 PopStat100.plot(ax=ax, color='blue')
 gdf.plot(ax=ax, markersize=5, color='red')
 plt.show()
