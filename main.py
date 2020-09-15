@@ -23,7 +23,7 @@ from Functions import BuilderData, Visualization
 #%%###FORMATTING DATA###
 
 #Define k_API
-k_API = [0.85]
+k_API = [0.85 ]
 
 #All heatwave data
 BuilderData.BuilderData(start = datetime.datetime(2018, 7, 15), end = datetime.datetime(2018, 8, 7), data_periodtype = 'Heatwave', k_API = k_API)
@@ -31,10 +31,12 @@ BuilderData.BuilderData(start = datetime.datetime(2019, 7, 22), end = datetime.d
 BuilderData.BuilderData(start = datetime.datetime(2019, 8, 23), end = datetime.datetime(2019, 8, 28), data_periodtype = 'Heatwave', k_API = k_API)
 
 #All summer data
+BuilderData.BuilderData(start = datetime.datetime(2017, 7, 1), end = datetime.datetime(2017, 8, 31), data_periodtype = 'Summer', k_API = k_API)
 BuilderData.BuilderData(start = datetime.datetime(2018, 7, 1), end = datetime.datetime(2018, 8, 31), data_periodtype = 'Summer', k_API = k_API)
 BuilderData.BuilderData(start = datetime.datetime(2019, 7, 1), end = datetime.datetime(2019, 8, 31), data_periodtype = 'Summer', k_API = k_API)
 
 #All yearly data
+BuilderData.BuilderData(start = datetime.datetime(2017, 1, 1), end = datetime.datetime(2017, 12, 31), data_periodtype = 'Year', k_API = k_API)
 BuilderData.BuilderData(start = datetime.datetime(2018, 1, 1), end = datetime.datetime(2018, 12, 31), data_periodtype = 'Year', k_API = k_API)
 BuilderData.BuilderData(start = datetime.datetime(2019, 1, 1), end = datetime.datetime(2019, 12, 31), data_periodtype = 'Year', k_API = k_API)
 
@@ -137,11 +139,11 @@ if len(analysis_date) == 0:
 df_d['sm_cor'] = df_d['sm']-df_d['P_sealed']/100*df_d['sm']
 
 
-df_d['Norm_loc'] = df_d['Norm']/(2-(1-df_d['P_sealed']/100)-df_d['SVF'])
+df_d['Norm_loc'] = df_d['Norm']/(2-(df_d['P_green']/100)-df_d['SVF'])
 df_d['UHI_norm_loc'] = df_d['UHI_max']/df_d['Norm_loc']
 df_d['UHI_norm'] = df_d['UHI_max']/df_d['Norm']
 
-df_d_sub['Norm_loc'] = df_d_sub['Norm']/(2-(1-df_d_sub['P_sealed']/100)-df_d_sub['SVF'])
+df_d_sub['Norm_loc'] = df_d_sub['Norm']/(2-(df_d_sub['P_green']/100)-df_d_sub['SVF'])
 df_d_sub['UHI_norm_loc'] = df_d_sub['UHI_max']/df_d_sub['Norm_loc']
 df_d_sub['UHI_norm'] = df_d_sub['UHI_max']/df_d_sub['Norm']
 
@@ -208,18 +210,24 @@ if 'df_d_sub' in globals():
     Visualization.ScatterSubset(cat = 'DTR_urban', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
     Visualization.ScatterSubset(cat = 'T_max_urban', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
     
-    
+    Visualization.ScatterSubsetCity(cat1 = 'UHI_norm_loc', cat2 = 'sm', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
+    Visualization.ScatterSubsetCity(cat1 = 'UHI_norm_loc', cat2 = 'API0.85_rural', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
+
+    Visualization.ScatterSubsetCity(cat1 = 'UHI_norm', cat2 = 'sm', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
+    Visualization.ScatterSubsetCity(cat1 = 'UHI_norm', cat2 = 'API0.85_rural', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
+
+
+
+
     
     for loc in df_d['Location'].unique():
         Visualization.ScatterSubsetSelect(cat = 'UHI_norm_loc', cat_select = 'Location', select=loc, dataframe=df_d, dataframe_sub=df_d_sub, analysis_name=analysis_name)
     
     
     
-    Visualization.ScatterSubsetSelect(cat = 'UHI_norm_loc', cat_select = 'Location', select = '2236', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
 
 
 
-    Visualization.ScatterSubsetCity(cat1 = 'UHI_norm_loc', cat2 = 'sm', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
 
 
 
@@ -229,28 +237,23 @@ ax.scatter(df_d['sm'], df_d['API0.85_rural'], c = df_d['Seepage'], cmap='RdYlGn'
 ax.legend()
 fig.show()
 
-fig = plt.figure()
-ax = fig.add_subplot()
-ax.scatter(df_d['Norm'], df_d['UHI_max'])
-ax.legend()
-fig.show()
 
-fig = plt.figure()
-ax = fig.add_subplot()
-ax.scatter(df_d['UHI_max'], df_d['sm'], c = df_d['Seepage'])
-fig.show()
+
+
+
 
 #Visualization per location
 
 plot_count = 1
-fig = plt.figure()
+fig_count = 1
+fig = plt.figure(figsize=(20,10))
 
 #For every location
 for Loc in df_h['Location'].unique():
     df = df_h.loc[df_h['Location'] == Loc]
     ax = fig.add_subplot(3,3,plot_count)
     ax.plot(df['T_urban'], color='red')
-    ax.plot(df['T_rural'], color='green')
+#    ax.plot(df['T_rural'], color='green')
     ax.set_title(Loc + ', LCZ = ' + str(df['LCZ'][0]))
     ax.set_ylabel('Temperature')
     ax.figure.autofmt_xdate()
@@ -260,9 +263,14 @@ for Loc in df_h['Location'].unique():
     plt.setp(ax.get_xticklabels(), rotation=30, horizontalalignment='right')
     if plot_count == 9:
         fig.tight_layout()
+        plt.savefig('Figures/TimeSerie_temperature_no'+ str(fig_count) + '_' +  analysis_name)
+        plt.close()
+        fig_count += 1
         plot_count = 1
-        fig = plt.figure()
+        fig = plt.figure(figsize=(20,10))
     else:
         plot_count += 1
     
 fig.tight_layout()
+plt.savefig('Figures/TimeSerie_temperature_no'+ str(fig_count) + '_' +  analysis_name)
+plt.close()
