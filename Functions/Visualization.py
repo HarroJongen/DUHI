@@ -133,5 +133,5 @@ def ScatterSubsetCity(cat1, cat2, dataframe, dataframe_sub, analysis_name):
     
     fig.suptitle('Scatter ' + cat1 + ' against ' + cat2 + ' per city')
     
-    plt.savefig('Figures/Scatter_' + cat1 + '_' + cat2 + '_' +  analysis_name)
+    plt.savefig('Figures/Scatter_' + cat1 + '_' + cat2[0] + '_' +  analysis_name)
     plt.close()
