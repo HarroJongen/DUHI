@@ -138,6 +138,7 @@ if Mapindex.crs == gdf.crs:
         
         
 df.loc[df['SVF']>1, 'SVF'] = df.loc[df['SVF']>1, 'SVF'] / 100
+df = df.replace(-3.4000000000000003e+38,np.NaN)
 
 #%%
 #Save update metadata
