@@ -9,36 +9,43 @@
 #Import packages
 print('Importing packages and functions')
 import datetime
-import numpy as np
 import glob
 import matplotlib.pyplot as plt
 import re
 import pickle
-from sklearn.linear_model import LinearRegression
+import numpy as np
+import pandas as pd
 
 
 #Import functions
 from Functions import BuilderData, Visualization
 
-#%%###FORMATTING DATA###
+ #%%###FORMATTING DATA###
+
+#Select filter
+Filter = True
 
 #Define k_API
 k_API = [0.85 ]
 
 #All heatwave data
-BuilderData.BuilderData(start = datetime.datetime(2018, 7, 15), end = datetime.datetime(2018, 8, 7), data_periodtype = 'Heatwave', k_API = k_API)
-BuilderData.BuilderData(start = datetime.datetime(2019, 7, 22), end = datetime.datetime(2019, 7, 27), data_periodtype = 'Heatwave', k_API = k_API)
-BuilderData.BuilderData(start = datetime.datetime(2019, 8, 23), end = datetime.datetime(2019, 8, 28), data_periodtype = 'Heatwave', k_API = k_API)
+BuilderData.BuilderData(start = datetime.datetime(2018, 7, 15), end = datetime.datetime(2018, 8, 7), data_periodtype = 'Heatwave', k_API = k_API, Filter = Filter)
+BuilderData.BuilderData(start = datetime.datetime(2019, 7, 22), end = datetime.datetime(2019, 7, 27), data_periodtype = 'Heatwave', k_API = k_API, Filter = Filter)
+BuilderData.BuilderData(start = datetime.datetime(2019, 8, 23), end = datetime.datetime(2019, 8, 28), data_periodtype = 'Heatwave', k_API = k_API, Filter = Filter)
 
 #All summer data
-BuilderData.BuilderData(start = datetime.datetime(2017, 7, 1), end = datetime.datetime(2017, 8, 31), data_periodtype = 'Summer', k_API = k_API)
-BuilderData.BuilderData(start = datetime.datetime(2018, 7, 1), end = datetime.datetime(2018, 8, 31), data_periodtype = 'Summer', k_API = k_API)
-BuilderData.BuilderData(start = datetime.datetime(2019, 7, 1), end = datetime.datetime(2019, 8, 31), data_periodtype = 'Summer', k_API = k_API)
+BuilderData.BuilderData(start = datetime.datetime(2017, 7, 1), end = datetime.datetime(2017, 8, 31), data_periodtype = 'Summer', k_API = k_API, Filter = Filter)
+BuilderData.BuilderData(start = datetime.datetime(2018, 7, 1), end = datetime.datetime(2018, 8, 31), data_periodtype = 'Summer', k_API = k_API, Filter = Filter)
+BuilderData.BuilderData(start = datetime.datetime(2019, 7, 1), end = datetime.datetime(2019, 8, 31), data_periodtype = 'Summer', k_API = k_API, Filter = Filter)
 
 #All yearly data
-BuilderData.BuilderData(start = datetime.datetime(2017, 1, 1), end = datetime.datetime(2017, 12, 31), data_periodtype = 'Year', k_API = k_API)
-BuilderData.BuilderData(start = datetime.datetime(2018, 1, 1), end = datetime.datetime(2018, 12, 31), data_periodtype = 'Year', k_API = k_API)
-BuilderData.BuilderData(start = datetime.datetime(2019, 1, 1), end = datetime.datetime(2019, 12, 31), data_periodtype = 'Year', k_API = k_API)
+BuilderData.BuilderData(start = datetime.datetime(2017, 1, 1), end = datetime.datetime(2017, 12, 31), data_periodtype = 'Year', k_API = k_API, Filter = Filter)
+BuilderData.BuilderData(start = datetime.datetime(2018, 1, 1), end = datetime.datetime(2018, 12, 31), data_periodtype = 'Year', k_API = k_API, Filter = Filter)
+BuilderData.BuilderData(start = datetime.datetime(2019, 1, 1), end = datetime.datetime(2019, 12, 31), data_periodtype = 'Year', k_API = k_API, Filter = Filter)
+
+#All data
+BuilderData.BuilderData(start = datetime.datetime(2017, 1, 1), end = datetime.datetime(2019, 12, 31), data_periodtype = 'Year', k_API = k_API, Filter = Filter)
+
 
 #%%###SETTINGS ANALYSIS###
 
@@ -53,7 +60,7 @@ BuilderData.BuilderData(start = datetime.datetime(2019, 1, 1), end = datetime.da
 #Optional suffixes:
     #_Subset (Followed by Heatwave, Summer or Year, adds extra dataframes as a subset for comparison)
     
-analysis_name = 'Year_Subset_Heatwave'
+analysis_name = 'Heatwave'
 regex = re.compile(r'([A-Za-z]+)_?([0-9]*)_?S?u?b?s?e?t?_?([A-Za-z]*)_?([0-9]*)')
 analysis_periodtype = regex.search(analysis_name).group(1)
 analysis_date = regex.search(analysis_name).group(2)
@@ -136,16 +143,29 @@ if len(analysis_date) == 0:
     
 #%%###ANALYSIS###
 
-df_d['sm_cor'] = df_d['sm']-df_d['P_sealed']/100*df_d['sm']
+df_d['sm_cor'] = np.nan
+for City in df_d['City'].unique():
+    df_d.loc[df_d['City'] == City, 'sm_cor'] = df_d.loc[df_d['City'] == City, 'sm']-np.nanmin(df_d.loc[df_d['City'] == City,'sm'])
+
+
+df_d['T_max_dif'] = df_d['T_max_urban'] - df_d['T_max_rural']
+
+df_d['DTR_dif'] = df_d['DTR_urban'] - df_d['DTR_rural']
+
+
+df_d['T_min_rural'] = df_d['T_max_rural'] - df_d['DTR_rural']
+df_d['T_min_urban'] = df_d['T_max_urban'] - df_d['DTR_urban']
+df_d['T_min_dif'] = df_d['T_min_urban'] -  df_d['T_min_rural']
 
 
 df_d['Norm_loc'] = df_d['Norm']/(2-(df_d['P_green']/100)-df_d['SVF'])
 df_d['UHI_norm_loc'] = df_d['UHI_max']/df_d['Norm_loc']
 df_d['UHI_norm'] = df_d['UHI_max']/df_d['Norm']
 
-df_d_sub['Norm_loc'] = df_d_sub['Norm']/(2-(df_d_sub['P_green']/100)-df_d_sub['SVF'])
-df_d_sub['UHI_norm_loc'] = df_d_sub['UHI_max']/df_d_sub['Norm_loc']
-df_d_sub['UHI_norm'] = df_d_sub['UHI_max']/df_d_sub['Norm']
+if len(subset_periodtype) != 0:
+    df_d_sub['Norm_loc'] = df_d_sub['Norm']/(2-(df_d_sub['P_green']/100)-df_d_sub['SVF'])
+    df_d_sub['UHI_norm_loc'] = df_d_sub['UHI_max']/df_d_sub['Norm_loc']
+    df_d_sub['UHI_norm'] = df_d_sub['UHI_max']/df_d_sub['Norm']
 
 
 #%%###VISUALIZATION###
@@ -155,51 +175,49 @@ df_d_sub['UHI_norm'] = df_d_sub['UHI_max']/df_d_sub['Norm']
 Visualization.Boxplot(cat='LCZ', dataframe=df_d, analysis_periodtype=analysis_periodtype, analysis_date=analysis_date)
 Visualization.Boxplot(cat='City', dataframe=df_d, analysis_periodtype=analysis_periodtype, analysis_date=analysis_date)
 
-fig, axes = plt.subplots(figsize=(20,10), nrows=2, ncols=2)
-axes[0,0].scatter(df_d['sm'], df_d['API0.8_rural'])
-mask = ~np.isnan(df_d['sm']) & ~np.isnan(df_d['API0.8_rural'])
-X = df_d[mask]['sm'].values.reshape(-1, 1)
-y = df_d[mask]['API0.8_rural'].values.reshape(-1,1)
-reg = LinearRegression()
-reg.fit(X,y)
-y_pred = reg.predict(np.array(np.arange(0, 1.1, 0.1)).reshape(-1,1))
-axes[0,0].plot(np.array(np.arange(0, 1.1, 0.1)).reshape(-1,1), y_pred, color='red')
-axes[0,0].set_ylabel('API (k = 0.80)')
+
+Visualization.Scatter(cat='DTR_rural', dataframe = df_d, analysis_name=analysis_name)
 
 
-axes[0,1].scatter(df_d['sm'], df_d['API0.85_rural'])
-mask = ~np.isnan(df_d['sm']) & ~np.isnan(df_d['API0.85_rural'])
-X = df_d[mask]['sm'].values.reshape(-1, 1)
-y = df_d[mask]['API0.85_rural'].values.reshape(-1,1)
-reg = LinearRegression()
-reg.fit(X,y)
-y_pred = reg.predict(np.array(np.arange(0, 1.1, 0.1)).reshape(-1,1))
-axes[0,1].plot(np.array(np.arange(0, 1.1, 0.1)).reshape(-1,1), y_pred, color='red')
-axes[0,1].set_ylabel('API (k = 0.85)')
+
+Visualization.ScatterCitySM(cat1 = 'UHI_max', dataframe = df_d, analysis_name=analysis_name)
+Visualization.ScatterCitySM(cat1 = 'UHI_norm', dataframe = df_d, analysis_name=analysis_name)
+Visualization.ScatterCitySM(cat1 = 'UHI_norm_loc', dataframe = df_d, analysis_name=analysis_name)
+Visualization.ScatterCitySM(cat1 = 'UHI_int', dataframe = df_d, analysis_name=analysis_name)
+
+Visualization.ScatterCitySM(cat1 = 'T_max_urban', dataframe = df_d, analysis_name=analysis_name)
+Visualization.ScatterCitySM(cat1 = 'T_max_rural', dataframe = df_d, analysis_name=analysis_name)
+Visualization.ScatterCitySM(cat1 = 'T_max_dif', dataframe = df_d, analysis_name=analysis_name)
+
+Visualization.ScatterCitySM(cat1 = 'T_min_urban', dataframe = df_d, analysis_name=analysis_name)
+Visualization.ScatterCitySM(cat1 = 'T_min_rural', dataframe = df_d, analysis_name=analysis_name)
+Visualization.ScatterCitySM(cat1 = 'T_min_dif', dataframe = df_d, analysis_name=analysis_name)
+
+Visualization.ScatterCitySM(cat1 = 'DTR_urban', dataframe = df_d, analysis_name=analysis_name)
+Visualization.ScatterCitySM(cat1 = 'DTR_rural', dataframe = df_d, analysis_name=analysis_name)
+Visualization.ScatterCitySM(cat1 = 'DTR_dif', dataframe = df_d, analysis_name=analysis_name)
 
 
-axes[1,0].scatter(df_d['sm'], df_d['API0.9_rural'])
-mask = ~np.isnan(df_d['sm']) & ~np.isnan(df_d['API0.9_rural'])
-X = df_d[mask]['sm'].values.reshape(-1, 1)
-y = df_d[mask]['API0.9_rural'].values.reshape(-1,1)
-reg = LinearRegression()
-reg.fit(X,y)
-y_pred = reg.predict(np.array(np.arange(0, 1.1, 0.1)).reshape(-1,1))
-axes[1,0].plot(np.array(np.arange(0, 1.1, 0.1)).reshape(-1,1), y_pred, color='red')
-axes[1,0].set_ylabel('API (k = 0.90)')
-fig.show()
+Visualization.ScatterCity(cat1 = 'UHI_max', cat2 = 'API0.85_rural', dataframe = df_d, analysis_name=analysis_name)
+Visualization.ScatterCity(cat1 = 'UHI_norm', cat2 = 'API0.85_rural', dataframe = df_d, analysis_name=analysis_name)
+Visualization.ScatterCity(cat1 = 'UHI_norm_loc', cat2 = 'API0.85_rural', dataframe = df_d, analysis_name=analysis_name)
+Visualization.ScatterCity(cat1 = 'UHI_int', cat2 = 'API0.85_rural', dataframe = df_d, analysis_name=analysis_name)
 
-fig = plt.figure()
-ax = fig.add_subplot()
-ax.scatter(df_d['sm'], df_d['API0.85_rural'])
-mask = ~np.isnan(df_d['sm']) & ~np.isnan(df_d['API0.85_rural'])
-X = df_d[mask]['sm'].values.reshape(-1, 1)
-y = df_d[mask]['API0.85_rural'].values.reshape(-1,1)
-reg = LinearRegression()
-reg.fit(X,y)
-y_pred = reg.predict(np.array(np.arange(0, 1.1, 0.1)).reshape(-1,1))
-ax.plot(np.array(np.arange(0, 1.1, 0.1)).reshape(-1,1), y_pred, color='red')
-ax.set_ylabel('API (k = 0.85)')
+Visualization.ScatterCity(cat1 = 'T_max_urban', cat2 = 'API0.85_rural', dataframe = df_d, analysis_name=analysis_name)
+Visualization.ScatterCity(cat1 = 'T_max_rural', cat2 = 'API0.85_rural', dataframe = df_d, analysis_name=analysis_name)
+Visualization.ScatterCity(cat1 = 'T_max_dif', cat2 = 'API0.85_rural', dataframe = df_d, analysis_name=analysis_name)
+
+Visualization.ScatterCity(cat1 = 'T_min_urban', cat2 = 'API0.85_rural', dataframe = df_d, analysis_name=analysis_name)
+Visualization.ScatterCity(cat1 = 'T_min_rural', cat2 = 'API0.85_rural', dataframe = df_d, analysis_name=analysis_name)
+Visualization.ScatterCity(cat1 = 'T_min_dif', cat2 = 'API0.85_rural', dataframe = df_d, analysis_name=analysis_name)
+
+Visualization.ScatterCity(cat1 = 'DTR_urban', cat2 = 'API0.85_rural', dataframe = df_d, analysis_name=analysis_name)
+Visualization.ScatterCity(cat1 = 'DTR_rural', cat2 = 'API0.85_rural', dataframe = df_d, analysis_name=analysis_name)
+Visualization.ScatterCity(cat1 = 'DTR_dif', cat2 = 'API0.85_rural', dataframe = df_d, analysis_name=analysis_name)
+
+
+for loc in df_d['Location'].unique():
+    Visualization.ScatterSelect(cat = 'UHI_norm', cat_select = 'Location', select=loc, dataframe=df_d, analysis_name=analysis_name)
 
 if 'df_d_sub' in globals():
     Visualization.ScatterSubset(cat = 'UHI_max', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
@@ -211,7 +229,7 @@ if 'df_d_sub' in globals():
     Visualization.ScatterSubset(cat = 'T_max_urban', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
     
     Visualization.ScatterSubsetCity(cat1 = 'UHI_norm_loc', cat2 = 'sm', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
-    Visualization.ScatterSubsetCity(cat1 = 'UHI_norm_loc', cat2 = 'API0.85_rural', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
+    Visualization.ScatterSubsetCity(cat1 = 'UHI_norm_loc', cat2 = 'P_green', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
 
     Visualization.ScatterSubsetCity(cat1 = 'UHI_norm', cat2 = 'sm', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
     Visualization.ScatterSubsetCity(cat1 = 'UHI_norm', cat2 = 'API0.85_rural', dataframe = df_d, dataframe_sub = df_d_sub, analysis_name = analysis_name)
@@ -222,7 +240,9 @@ if 'df_d_sub' in globals():
     
     for loc in df_d['Location'].unique():
         Visualization.ScatterSubsetSelect(cat = 'UHI_norm_loc', cat_select = 'Location', select=loc, dataframe=df_d, dataframe_sub=df_d_sub, analysis_name=analysis_name)
-    
+        Visualization.ScatterSubsetSelect(cat = 'UHI_norm', cat_select = 'Location', select=loc, dataframe=df_d, dataframe_sub=df_d_sub, analysis_name=analysis_name)
+        Visualization.ScatterSubsetSelect(cat = 'UHI_max', cat_select = 'Location', select=loc, dataframe=df_d, dataframe_sub=df_d_sub, analysis_name=analysis_name)
+
     
     
 
@@ -233,12 +253,11 @@ if 'df_d_sub' in globals():
 
 fig = plt.figure()
 ax = fig.add_subplot()
-ax.scatter(df_d['sm'], df_d['API0.85_rural'], c = df_d['Seepage'], cmap='RdYlGn')
-ax.legend()
+ax.scatter(df_d['sm_cor'], df_d['DTR_urban'], c=pd.factorize(df_d['City'])[0])
 fig.show()
 
 
-
+ 
 
 
 
@@ -253,7 +272,7 @@ for Loc in df_h['Location'].unique():
     df = df_h.loc[df_h['Location'] == Loc]
     ax = fig.add_subplot(3,3,plot_count)
     ax.plot(df['T_urban'], color='red')
-#    ax.plot(df['T_rural'], color='green')
+    ax.plot(df['T_rural'], color='green')
     ax.set_title(Loc + ', LCZ = ' + str(df['LCZ'][0]))
     ax.set_ylabel('Temperature')
     ax.figure.autofmt_xdate()
