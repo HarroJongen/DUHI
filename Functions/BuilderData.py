@@ -3,7 +3,7 @@
 #Author: Harro Jongen
 #Function that extracts data from all datasets to build the datasets for analysis in DUHI
 
-def BuilderData(start, end, data_periodtype, k_API = [0.85]):
+def BuilderData(start, end, data_periodtype, k_API = [0.85], Filter = True):
     import datetime
     import pandas as pd
     import glob
@@ -11,7 +11,7 @@ def BuilderData(start, end, data_periodtype, k_API = [0.85]):
     import pickle
 
     #Import functions
-    from Functions import FormatterSIC, FormatterMocca, FormatterWOW, FormatterRdam, UrbanRuralCombiner, FormatterUrbanRural, FormatterBeijum, BuilderDaily, SatelliteToTimeseries, NormalizerUHI
+    from Functions import FormatterSIC, FormatterMocca, FormatterWOW, FormatterRdam, UrbanRuralCombiner, FormatterUrbanRural, FormatterBeijum, BuilderDaily, SatelliteToTimeseries, NormalizerUHI, FilteringUHI
     
     #%%###SETTINGS DATA###
     print('Loading settings')
@@ -32,49 +32,49 @@ def BuilderData(start, end, data_periodtype, k_API = [0.85]):
     FormatterWOW.FormatterWOW('Amsterdam', '916696001', start, end , file = "Data/Cities/Amsterdam/export_916696001.csv", location = None, rural=True)
     FormatterWOW.FormatterWOW('Rotterdam', '915096001', start, end , file = "Data/Cities/Rotterdam/Rural/export_915096001.csv", location = None, rural=True)
     
-    FormatterWOW.FormatterWOW('Enschede', '917576001', start, end , file = "Data/Cities/Twente/Rural/export_917576001.csv", location = None, rural=True)
-    FormatterWOW.FormatterWOW('Enschede', 'aacae4bb-0292-e911-80e7-0003ff59889d', start, end , file = "Data/Cities/Twente/export_aacae4bb-0292-e911-80e7-0003ff59889d.csv", location = 'ZuidOost', rural=False)
-    FormatterWOW.FormatterWOW('Enschede', 'e12a4b13-783e-e911-867d-0003ff597ce7', start, end , file = "Data/Cities/Twente/export_e12a4b13-783e-e911-867d-0003ff597ce7.csv", location = 'Glanerburg', rural=False)
+    # FormatterWOW.FormatterWOW('Enschede', '917576001', start, end , file = "Data/Cities/Twente/Rural/export_917576001.csv", location = None, rural=True)
+    # FormatterWOW.FormatterWOW('Enschede', 'aacae4bb-0292-e911-80e7-0003ff59889d', start, end , file = "Data/Cities/Twente/export_aacae4bb-0292-e911-80e7-0003ff59889d.csv", location = 'ZuidOost', rural=False)
+    # FormatterWOW.FormatterWOW('Enschede', 'e12a4b13-783e-e911-867d-0003ff597ce7', start, end , file = "Data/Cities/Twente/export_e12a4b13-783e-e911-867d-0003ff597ce7.csv", location = 'Glanerburg', rural=False)
     
-    FormatterWOW.FormatterWOW('Hengelo', '917576001', start, end , file = "Data/Cities/Twente/Rural/export_917576001.csv", location = None, rural=True)
-    FormatterWOW.FormatterWOW('Hengelo', '922086001', start, end , file = "Data/Cities/Twente/export_922086001.csv", location = 'Verveld', rural=False)
-    FormatterWOW.FormatterWOW('Hengelo', '1881744', start, end , file = "Data/Cities/Twente/export_1881744.csv", location = 'Losser', rural=False)
+    # FormatterWOW.FormatterWOW('Hengelo', '917576001', start, end , file = "Data/Cities/Twente/Rural/export_917576001.csv", location = None, rural=True)
+    # FormatterWOW.FormatterWOW('Hengelo', '922086001', start, end , file = "Data/Cities/Twente/export_922086001.csv", location = 'Verveld', rural=False)
+    # FormatterWOW.FormatterWOW('Hengelo', '1881744', start, end , file = "Data/Cities/Twente/export_1881744.csv", location = 'Losser', rural=False)
 
-    FormatterWOW.FormatterWOW('Oldenzaal', '917576001', start, end , file = "Data/Cities/Twente/Rural/export_917576001.csv", location = None, rural=True)
-    FormatterWOW.FormatterWOW('Oldenzaal', 'c625a11c-0473-e811-9ccb-0003ff59b2da', start, end , file = "Data/Cities/Twente/export_c625a11c-0473-e811-9ccb-0003ff59b2da.csv", location = '22', rural=False)
+    # FormatterWOW.FormatterWOW('Oldenzaal', '917576001', start, end , file = "Data/Cities/Twente/Rural/export_917576001.csv", location = None, rural=True)
+    # FormatterWOW.FormatterWOW('Oldenzaal', 'c625a11c-0473-e811-9ccb-0003ff59b2da', start, end , file = "Data/Cities/Twente/export_c625a11c-0473-e811-9ccb-0003ff59b2da.csv", location = '22', rural=False)
 
-    FormatterWOW.FormatterWOW('Eindhoven', '917586001', start, end , file = "Data/Cities/Eindhoven/Rural/export_917586001.csv", location = None, rural=True)
-    FormatterWOW.FormatterWOW('Eindhoven', '918216001', start, end , file = "Data/Cities/Eindhoven/export_918216001.csv", location = 'GroteBeek', rural=False)
-    FormatterWOW.FormatterWOW('Eindhoven', '976856001', start, end , file = "Data/Cities/Eindhoven/export_976856001.csv", location = 'Sondervinck', rural=False)
-    FormatterWOW.FormatterWOW('Eindhoven', 'e0ce6aa1-b5c1-e911-b083-0003ff59a71f', start, end , file = "Data/Cities/Eindhoven/export_e0ce6aa1-b5c1-e911-b083-0003ff59a71f.csv", location = 'Pegbroekenlaan', rural=False)
-    FormatterWOW.FormatterWOW('Eindhoven', '670b6488-fc56-e611-9401-0003ff5987fd', start, end , file = "Data/Cities/Eindhoven/export_670b6488-fc56-e611-9401-0003ff5987fd.csv", location = 'Best', rural=False)
-    FormatterWOW.FormatterWOW('Eindhoven', '96906327-4fb1-e811-a8ec-0003ff59b2da', start, end , file = "Data/Cities/Eindhoven/export_96906327-4fb1-e811-a8ec-0003ff59b2da.csv", location = 'Oirschot', rural=False)
-    FormatterWOW.FormatterWOW('Eindhoven', 'b64f64d5-31c9-e611-9400-0003ff59aed0', start, end , file = "Data/Cities/Eindhoven/export_b64f64d5-31c9-e611-9400-0003ff59aed0.csv", location = 'Nuenen', rural=False)
-    FormatterWOW.FormatterWOW('Eindhoven', '921496001', start, end , file = "Data/Cities/Eindhoven/export_921496001.csv", location = 'Son', rural=False)
+    # FormatterWOW.FormatterWOW('Eindhoven', '917586001', start, end , file = "Data/Cities/Eindhoven/Rural/export_917586001.csv", location = None, rural=True)
+    # FormatterWOW.FormatterWOW('Eindhoven', '918216001', start, end , file = "Data/Cities/Eindhoven/export_918216001.csv", location = 'GroteBeek', rural=False)
+    # FormatterWOW.FormatterWOW('Eindhoven', '976856001', start, end , file = "Data/Cities/Eindhoven/export_976856001.csv", location = 'Sondervinck', rural=False)
+    # FormatterWOW.FormatterWOW('Eindhoven', 'e0ce6aa1-b5c1-e911-b083-0003ff59a71f', start, end , file = "Data/Cities/Eindhoven/export_e0ce6aa1-b5c1-e911-b083-0003ff59a71f.csv", location = 'Pegbroekenlaan', rural=False)
+    # FormatterWOW.FormatterWOW('Eindhoven', '670b6488-fc56-e611-9401-0003ff5987fd', start, end , file = "Data/Cities/Eindhoven/export_670b6488-fc56-e611-9401-0003ff5987fd.csv", location = 'Best', rural=False)
+    # FormatterWOW.FormatterWOW('Eindhoven', '96906327-4fb1-e811-a8ec-0003ff59b2da', start, end , file = "Data/Cities/Eindhoven/export_96906327-4fb1-e811-a8ec-0003ff59b2da.csv", location = 'Oirschot', rural=False)
+    # FormatterWOW.FormatterWOW('Eindhoven', 'b64f64d5-31c9-e611-9400-0003ff59aed0', start, end , file = "Data/Cities/Eindhoven/export_b64f64d5-31c9-e611-9400-0003ff59aed0.csv", location = 'Nuenen', rural=False)
+    # FormatterWOW.FormatterWOW('Eindhoven', '921496001', start, end , file = "Data/Cities/Eindhoven/export_921496001.csv", location = 'Son', rural=False)
 
-    FormatterWOW.FormatterWOW('Groningen', '911216001', start, end , file = "Data/Cities/Groningen/Rural/export_911216001.csv", location = None, rural=True)
-    FormatterWOW.FormatterWOW('Groningen', '1106d8ca-da22-e811-bbd5-0003ff5993c1', start, end , file = "Data/Cities/Groningen/export_1106d8ca-da22-e811-bbd5-0003ff5993c1.csv", location = 'Ulgersmaborg', rural=False)
-    FormatterWOW.FormatterWOW('Groningen', 'f93cfaad-5b9e-e811-b96f-0003ff5993a0', start, end , file = "Data/Cities/Groningen/export_f93cfaad-5b9e-e811-b96f-0003ff5993a0.csv", location = 'Rozemarijnstraat', rural=False)
-    FormatterWOW.FormatterWOW('Groningen', '92137096-2d22-e911-9462-0003ff59610a', start, end , file = "Data/Cities/Groningen/export_92137096-2d22-e911-9462-0003ff59610a.csv", location = 'Deheld', rural=False)
-    FormatterWOW.FormatterWOW('Groningen', '4895f26e-0c64-e811-bd6d-0003ff59b2de', start, end , file = "Data/Cities/Groningen/export_4895f26e-0c64-e811-bd6d-0003ff59b2de.csv", location = 'Hereweg', rural=False)
+    # FormatterWOW.FormatterWOW('Groningen', '911216001', start, end , file = "Data/Cities/Groningen/Rural/export_911216001.csv", location = None, rural=True)
+    # FormatterWOW.FormatterWOW('Groningen', '1106d8ca-da22-e811-bbd5-0003ff5993c1', start, end , file = "Data/Cities/Groningen/export_1106d8ca-da22-e811-bbd5-0003ff5993c1.csv", location = 'Ulgersmaborg', rural=False)
+    # FormatterWOW.FormatterWOW('Groningen', 'f93cfaad-5b9e-e811-b96f-0003ff5993a0', start, end , file = "Data/Cities/Groningen/export_f93cfaad-5b9e-e811-b96f-0003ff5993a0.csv", location = 'Rozemarijnstraat', rural=False)
+    # FormatterWOW.FormatterWOW('Groningen', '92137096-2d22-e911-9462-0003ff59610a', start, end , file = "Data/Cities/Groningen/export_92137096-2d22-e911-9462-0003ff59610a.csv", location = 'Deheld', rural=False)
+    # FormatterWOW.FormatterWOW('Groningen', '4895f26e-0c64-e811-bd6d-0003ff59b2de', start, end , file = "Data/Cities/Groningen/export_4895f26e-0c64-e811-bd6d-0003ff59b2de.csv", location = 'Hereweg', rural=False)
 
-    FormatterWOW.FormatterWOW('Maastricht', '917536001', start, end , file = "Data/Cities/Maastricht/Rural/export_917536001.csv", location = None, rural=True)
-    FormatterWOW.FormatterWOW('Maastricht', '78095ddd-09cd-e611-9400-000d3ab1cf4b', start, end , file = "Data/Cities/Maastricht/export_78095ddd-09cd-e611-9400-000d3ab1cf4b.csv", location = 'Oost', rural=False)
-    FormatterWOW.FormatterWOW('Maastricht', '9b33430b-fcc7-e911-b083-0003ff59a71f', start, end , file = "Data/Cities/Maastricht/export_9b33430b-fcc7-e911-b083-0003ff59a71f.csv", location = 'Gronsveld', rural=False)
-    FormatterWOW.FormatterWOW('Maastricht', '4c65e349-e7ca-e911-b3b9-0003ff59a783', start, end , file = "Data/Cities/Maastricht/export_4c65e349-e7ca-e911-b3b9-0003ff59a783.csv", location = 'Daalhof', rural=False)
-    FormatterWOW.FormatterWOW('Maastricht', '938466001', start, end , file = "Data/Cities/Maastricht/export_938466001.csv", location = 'Geleen', rural=False)
+    # FormatterWOW.FormatterWOW('Maastricht', '917536001', start, end , file = "Data/Cities/Maastricht/Rural/export_917536001.csv", location = None, rural=True)
+    # FormatterWOW.FormatterWOW('Maastricht', '78095ddd-09cd-e611-9400-000d3ab1cf4b', start, end , file = "Data/Cities/Maastricht/export_78095ddd-09cd-e611-9400-000d3ab1cf4b.csv", location = 'Oost', rural=False)
+    # FormatterWOW.FormatterWOW('Maastricht', '9b33430b-fcc7-e911-b083-0003ff59a71f', start, end , file = "Data/Cities/Maastricht/export_9b33430b-fcc7-e911-b083-0003ff59a71f.csv", location = 'Gronsveld', rural=False)
+    # FormatterWOW.FormatterWOW('Maastricht', '4c65e349-e7ca-e911-b3b9-0003ff59a783', start, end , file = "Data/Cities/Maastricht/export_4c65e349-e7ca-e911-b3b9-0003ff59a783.csv", location = 'Daalhof', rural=False)
+    # FormatterWOW.FormatterWOW('Maastricht', '938466001', start, end , file = "Data/Cities/Maastricht/export_938466001.csv", location = 'Geleen', rural=False)
 
-    FormatterWOW.FormatterWOW('Zwolle', '913976001', start, end , file = "Data/Cities/Zwolle/Rural/export_913976001.csv", location = None, rural=True)
-    FormatterWOW.FormatterWOW('Zwolle', 'cb6673ad-fba7-e911-b083-0003ff59a71f', start, end , file = "Data/Cities/Zwolle/export_cb6673ad-fba7-e911-b083-0003ff59a71f.csv", location = 'Centrum', rural=True)
-    FormatterWOW.FormatterWOW('Zwolle', '02b21464-89e3-e811-a140-0003ff5993a0', start, end , file = "Data/Cities/Zwolle/export_02b21464-89e3-e811-a140-0003ff5993a0.csv", location = 'Mussehage', rural=False)
-    FormatterWOW.FormatterWOW('Zwolle', '7b1d5833-0c65-e811-bd6d-0003ff59b2de', start, end , file = "Data/Cities/Zwolle/export_7b1d5833-0c65-e811-bd6d-0003ff59b2de.csv", location = 'Seringenstraat', rural=False)
-    FormatterWOW.FormatterWOW('Zwolle', '67f749dd-1845-e911-867d-0003ff5960dd', start, end , file = "Data/Cities/Zwolle/export_67f749dd-1845-e911-867d-0003ff5960dd.csv", location = 'Bosweg', rural=False)
-    FormatterWOW.FormatterWOW('Zwolle', '90a6c1c2-89e3-e811-a140-0003ff5993a0', start, end , file = "Data/Cities/Zwolle/export_90a6c1c2-89e3-e811-a140-0003ff5993a0.csv", location = 'Labyrinthstraat', rural=False)
-    FormatterWOW.FormatterWOW('Zwolle', '8d6449bf-17b2-e811-a8eb-0003ff596efb', start, end , file = "Data/Cities/Zwolle/export_8d6449bf-17b2-e811-a8eb-0003ff596efb.csv", location = 'Oase', rural=False)
-    FormatterWOW.FormatterWOW('Zwolle', 'e86ae272-8ae3-e811-a140-0003ff5993a0', start, end , file = "Data/Cities/Zwolle/export_e86ae272-8ae3-e811-a140-0003ff5993a0.csv", location = 'Stadshoeve', rural=False)
-    FormatterWOW.FormatterWOW('Zwolle', 'b89d8aaa-eaa7-e911-b083-0003ff59a71f', start, end , file = "Data/Cities/Zwolle/export_b89d8aaa-eaa7-e911-b083-0003ff59a71f.csv", location = 'Stadshagen', rural=False)
-    FormatterWOW.FormatterWOW('Zwolle', '8a5f044a-8ae3-e811-a140-0003ff598dc6', start, end , file = "Data/Cities/Zwolle/export_8a5f044a-8ae3-e811-a140-0003ff598dc6.csv", location = 'Sterrenkroos', rural=False)
-    FormatterWOW.FormatterWOW('Zwolle', 'e1400101-89e3-e811-a140-0003ff5993a0', start, end , file = "Data/Cities/Zwolle/export_e1400101-89e3-e811-a140-0003ff5993a0.csv", location = 'Gorterstraat', rural=False)
+    # FormatterWOW.FormatterWOW('Zwolle', '913976001', start, end , file = "Data/Cities/Zwolle/Rural/export_913976001.csv", location = None, rural=True)
+    # FormatterWOW.FormatterWOW('Zwolle', 'cb6673ad-fba7-e911-b083-0003ff59a71f', start, end , file = "Data/Cities/Zwolle/export_cb6673ad-fba7-e911-b083-0003ff59a71f.csv", location = 'Centrum', rural=True)
+    # FormatterWOW.FormatterWOW('Zwolle', '02b21464-89e3-e811-a140-0003ff5993a0', start, end , file = "Data/Cities/Zwolle/export_02b21464-89e3-e811-a140-0003ff5993a0.csv", location = 'Mussehage', rural=False)
+    # FormatterWOW.FormatterWOW('Zwolle', '7b1d5833-0c65-e811-bd6d-0003ff59b2de', start, end , file = "Data/Cities/Zwolle/export_7b1d5833-0c65-e811-bd6d-0003ff59b2de.csv", location = 'Seringenstraat', rural=False)
+    # FormatterWOW.FormatterWOW('Zwolle', '67f749dd-1845-e911-867d-0003ff5960dd', start, end , file = "Data/Cities/Zwolle/export_67f749dd-1845-e911-867d-0003ff5960dd.csv", location = 'Bosweg', rural=False)
+    # FormatterWOW.FormatterWOW('Zwolle', '90a6c1c2-89e3-e811-a140-0003ff5993a0', start, end , file = "Data/Cities/Zwolle/export_90a6c1c2-89e3-e811-a140-0003ff5993a0.csv", location = 'Labyrinthstraat', rural=False)
+    # FormatterWOW.FormatterWOW('Zwolle', '8d6449bf-17b2-e811-a8eb-0003ff596efb', start, end , file = "Data/Cities/Zwolle/export_8d6449bf-17b2-e811-a8eb-0003ff596efb.csv", location = 'Oase', rural=False)
+    # FormatterWOW.FormatterWOW('Zwolle', 'e86ae272-8ae3-e811-a140-0003ff5993a0', start, end , file = "Data/Cities/Zwolle/export_e86ae272-8ae3-e811-a140-0003ff5993a0.csv", location = 'Stadshoeve', rural=False)
+    # FormatterWOW.FormatterWOW('Zwolle', 'b89d8aaa-eaa7-e911-b083-0003ff59a71f', start, end , file = "Data/Cities/Zwolle/export_b89d8aaa-eaa7-e911-b083-0003ff59a71f.csv", location = 'Stadshagen', rural=False)
+    # FormatterWOW.FormatterWOW('Zwolle', '8a5f044a-8ae3-e811-a140-0003ff598dc6', start, end , file = "Data/Cities/Zwolle/export_8a5f044a-8ae3-e811-a140-0003ff598dc6.csv", location = 'Sterrenkroos', rural=False)
+    # FormatterWOW.FormatterWOW('Zwolle', 'e1400101-89e3-e811-a140-0003ff5993a0', start, end , file = "Data/Cities/Zwolle/export_e1400101-89e3-e811-a140-0003ff5993a0.csv", location = 'Gorterstraat', rural=False)
 
 
     #Rotterdam data
@@ -127,6 +127,11 @@ def BuilderData(start, end, data_periodtype, k_API = [0.85]):
             #Add soil moisture
             df['sm'] = sm_df['sm']
             df.to_csv(file, index=False)
+    
+    #Filter data for non UHI related phenomena
+    if Filter:
+        for dataframe_day, dataframe_hour in zip(Combinations['DailyFile'], Combinations['TotalFile']):
+            FilteringUHI.FilteringUHI(dataframe_day, dataframe_hour)
     
     #%%###SAVING DATA###
     
