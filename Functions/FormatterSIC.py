@@ -41,10 +41,10 @@ def FormatterSIC(start, end, file, overwrite = True):
                 df['RH_urban'] = df['RH_urban'] * 100
                 
                 #Replace NaN string and -40 with nan
-                df = df.replace(-40,np.NaN)
                 df = df.replace('    NaN',np.NaN)
                 df = df.replace('    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN    NaN',np.NaN)
-                
+                df.loc[df["T_urban"] > -20, "T"] = np.NaN
+
                 #Write to csv file
                 df.to_csv(filepath, columns = (['date', 'T_urban', 'u_urban', 'RH_urban']), index = False)
                 
