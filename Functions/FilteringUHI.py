@@ -7,38 +7,31 @@ def FilteringUHI(dataframe_day, dataframe_hour):
     import pandas as pd
     import numpy as np
     
-    df_d = pd.read_csv(dataframe_day)
-    df_d['date'] = pd.to_datetime(df_d['date'])
-    df_d.set_index('date', inplace=True)
-    
-    df_h = pd.read_csv(dataframe_hour)
-    df_h['date'] = pd.to_datetime(df_h['date'])
-    df_h.set_index('date', inplace=True)    
-    
+   
     #Filtering rain events
-    df_sum = df_h.resample('D').sum()
+    df_sum = dataframe_hour.resample('D').sum()
     Filter_rain = df_sum['P_rural']<0.3
 
     #Filtering sudden wind changes
-    df_h['change'] =  df_h['u_rural'] - df_h['u_rural'].shift(1)
-    df_max = df_h.resample('D').max()
+    dataframe_hour['change'] =  dataframe_hour['u_rural'] - dataframe_hour['u_rural'].shift(1)
+    df_max = dataframe_hour.resample('D').max()
     Filter_wind = df_max['change']<2
-    
+    dataframe_hour = dataframe_hour.drop(['change'], axis=1)    
+
     #Filtering fog
-    df_mean = df_h.resample('D').mean()
+    df_mean = dataframe_hour.resample('D').mean()
     Filter_fog = df_mean['RH_rural']<80
 
     #Total filter
     Filters = pd.concat([Filter_fog, Filter_rain, Filter_wind], axis=1)
     Filters['Filter'] = np.nan
-    Filters['Filter'] = Filters.loc[(Filters['RH_rural']) & (Filters['P_rural']) & (Filters['change']), 'Filter']
+    Filters['Filter'] = Filters.loc[(Filters['RH_rural']) & (Filters['P_rural']) & (Filters['change'])]
     Filters.loc[Filters['Filter']!=True, 'Filter'] = False
     
     #Filtering
-    df_d[Filters['Filter']==False] = np.nan
-    df_h[Filters['Filter'].resample('H').pad()[df_h.index]==False] = np.nan
+    dataframe_day.loc[Filters['Filter']==False, ['T_max_urban', 'P_urban', 'T_max_rural', 'UHI_max', 'Norm', 'DTR_urban', 'DTR_rural', 'UHI_int', 'API0.85_urban', 'API0.85_rural', 'sm']] = np.nan
+    dataframe_hour.loc[Filters['Filter'].resample('H').pad()[dataframe_hour.index]==False, ['T_urban', 'u_urban', 'P_urban', 'RH_urban', 'T_rural', 'u_rural', 'P_rural', 'p_rural', 'RH_rural', 'UHI']] = np.nan
 
     #Save file
-    df_d.to_csv('Data/Amsterdam_2194_daily.csv')
-    df_h.to_csv('Data/Amsterdam_2194_total.csv')
+    return(dataframe_day, dataframe_hour)
     
