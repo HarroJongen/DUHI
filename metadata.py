@@ -153,7 +153,7 @@ gdf.to_csv('Data/Metadata/Locations_rd.csv', index=False)
 #Make a map of LCZ and locations
 fig, ax = plt.subplots(figsize=(10, 10))
 Mapindex.plot(ax=ax, color='blue')
-show(src)
+show(LCZ)
 Soil.plot(ax=ax, color='blue')
 Surface.plot(ax=ax, color='blue')
 PopStat100.plot(ax=ax, color='blue')
