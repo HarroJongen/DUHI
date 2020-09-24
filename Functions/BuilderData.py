@@ -3,12 +3,13 @@
 #Author: Harro Jongen
 #Function that extracts data from all datasets to build the datasets for analysis in DUHI
 
-def BuilderData(start, end, data_periodtype, k_API = [0.85], Filter = True):
+def BuilderData(start, end, k_API = [0.85], Filter = True):
     import datetime
     import pandas as pd
     import glob
     from geopy.geocoders import Nominatim
     import pickle
+    import os
 
     #Import functions
     from Functions import FormatterSIC, FormatterMocca, FormatterWOW, FormatterRdam, UrbanRuralCombiner, FormatterUrbanRural, FormatterBeijum, BuilderDaily, SatelliteToTimeseries, NormalizerUHI, FilteringUHI
@@ -19,7 +20,10 @@ def BuilderData(start, end, data_periodtype, k_API = [0.85], Filter = True):
     #Add 20 extra days foe API calculation
     start_analysis = start
     start = start - datetime.timedelta(days=20)
-     
+    
+    files = glob.glob('Data/Preprocessed/*')
+    for f in files:
+        os.remove(f)
     
     #%%###FORMATTING DATA###
     
@@ -127,12 +131,7 @@ def BuilderData(start, end, data_periodtype, k_API = [0.85], Filter = True):
             #Add soil moisture
             df['sm'] = sm_df['sm']
             df.to_csv(file, index=False)
-    
-    #Filter data for non UHI related phenomena
-    if Filter:
-        for dataframe_day, dataframe_hour in zip(Combinations['DailyFile'], Combinations['TotalFile']):
-            FilteringUHI.FilteringUHI(dataframe_day, dataframe_hour)
-    
+       
     #%%###SAVING DATA###
     
     #Load metadata and combinations
@@ -196,7 +195,7 @@ def BuilderData(start, end, data_periodtype, k_API = [0.85], Filter = True):
     
     #Save both the dictionaries and the dataframes in pickles
     for file, name in zip([df_d, df_h],['df_d', 'df_h']):
-        filename =  'Data/Preprocessed/' + name + '_' + data_periodtype + '_' + \
+        filename =  'Data/Preprocessed/' + name + '_' + \
                 str(start_analysis)[0:4] + str(start_analysis)[5:7] + str(start_analysis)[8:10] + \
                 '_'     + str(end)[0:4] + str(end)[5:7] + str(end)[8:10]
         outfile = open(filename,'wb')
