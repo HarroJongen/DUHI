@@ -18,33 +18,19 @@ import pandas as pd
 
 
 #Import functions
-from Functions import BuilderData, Visualization
+from Functions import BuilderData, Visualization, BuilderPeriods, FilteringUHI
 
  #%%###FORMATTING DATA###
-
-#Select filter
-Filter = True
 
 #Define k_API
 k_API = [0.85 ]
 
-#All heatwave data
-BuilderData.BuilderData(start = datetime.datetime(2018, 7, 15), end = datetime.datetime(2018, 8, 7), data_periodtype = 'Heatwave', k_API = k_API, Filter = Filter)
-BuilderData.BuilderData(start = datetime.datetime(2019, 7, 22), end = datetime.datetime(2019, 7, 27), data_periodtype = 'Heatwave', k_API = k_API, Filter = Filter)
-BuilderData.BuilderData(start = datetime.datetime(2019, 8, 23), end = datetime.datetime(2019, 8, 28), data_periodtype = 'Heatwave', k_API = k_API, Filter = Filter)
-
-#All summer data
-BuilderData.BuilderData(start = datetime.datetime(2017, 7, 1), end = datetime.datetime(2017, 8, 31), data_periodtype = 'Summer', k_API = k_API, Filter = Filter)
-BuilderData.BuilderData(start = datetime.datetime(2018, 7, 1), end = datetime.datetime(2018, 8, 31), data_periodtype = 'Summer', k_API = k_API, Filter = Filter)
-BuilderData.BuilderData(start = datetime.datetime(2019, 7, 1), end = datetime.datetime(2019, 8, 31), data_periodtype = 'Summer', k_API = k_API, Filter = Filter)
-
-#All yearly data
-BuilderData.BuilderData(start = datetime.datetime(2017, 1, 1), end = datetime.datetime(2017, 12, 31), data_periodtype = 'Year', k_API = k_API, Filter = Filter)
-BuilderData.BuilderData(start = datetime.datetime(2018, 1, 1), end = datetime.datetime(2018, 12, 31), data_periodtype = 'Year', k_API = k_API, Filter = Filter)
-BuilderData.BuilderData(start = datetime.datetime(2019, 1, 1), end = datetime.datetime(2019, 12, 31), data_periodtype = 'Year', k_API = k_API, Filter = Filter)
+#Define period
+start = datetime.datetime(2017, 1, 1)
+end = datetime.datetime(2019, 12, 31)
 
 #All data
-BuilderData.BuilderData(start = datetime.datetime(2017, 1, 1), end = datetime.datetime(2019, 12, 31), data_periodtype = 'Year', k_API = k_API, Filter = Filter)
+BuilderData.BuilderData(start = start, end = end, k_API = k_API)
 
 
 #%%###SETTINGS ANALYSIS###
@@ -52,7 +38,6 @@ BuilderData.BuilderData(start = datetime.datetime(2017, 1, 1), end = datetime.da
 #Choose the dataset for analysis, options are:
     #Heatwave (Selects all heatwaves available)
     #Heatwave_2018 (Selects all heatwaves available from the specified year)
-    #Heatwave_20180715 (Selects heatwave starting at the specified date)
     #Summer (Selects all summers available)
     #Summer_2018 (Selects the summer from the specified year)
     #Year (Selects all years available)
@@ -60,13 +45,14 @@ BuilderData.BuilderData(start = datetime.datetime(2017, 1, 1), end = datetime.da
 #Optional suffixes:
     #_Subset (Followed by Heatwave, Summer or Year, adds extra dataframes as a subset for comparison)
     
-analysis_name = 'Heatwave'
+analysis_name = 'Summer'
 regex = re.compile(r'([A-Za-z]+)_?([0-9]*)_?S?u?b?s?e?t?_?([A-Za-z]*)_?([0-9]*)')
 analysis_periodtype = regex.search(analysis_name).group(1)
-analysis_date = regex.search(analysis_name).group(2)
+analysis_year = regex.search(analysis_name).group(2)
 subset_periodtype = regex.search(analysis_name).group(3)
 
-
+#Select filter
+Filter = False
 
 #%%###LOADING DATA###
 
@@ -77,7 +63,7 @@ Pickles = glob.glob('Data/Preprocessed/*')
 data = {}
 
 #Define regex item to find characteristics of saved data
-regex = re.compile(r'Data/Preprocessed\\df_([dh]+)_([A-Za-z]+)_([0-9]+)_[0-9]+')
+regex = re.compile(r'Data/Preprocessed\\df_([dh]+)_[0-9]+_[0-9]+')
 
 #For all preprocessed files
 for Pickle in Pickles:
@@ -85,62 +71,48 @@ for Pickle in Pickles:
     infile = open(Pickle,'rb')
     #Define characteristics of the pickle file
     res = regex.search(Pickle).group(1)
-    periodtype = regex.search(Pickle).group(2)
-    start_day = regex.search(Pickle).group(3)
-    
-    #Check if the file meets the analysis type
-    if analysis_periodtype == periodtype == 'Heatwave' and len(analysis_date) == 0:
-        #Heatwave
-        if 'df_' + res in data:
-            data['df_' + res] = data['df_' + res].append(pickle.load(infile)) 
-        else:
-            data['df_' + res] = pickle.load(infile)
-    elif analysis_periodtype == periodtype == 'Heatwave' and len(analysis_date) == 4 and start_day[0:4] == analysis_date:
-        #Heatwave_2018
-        if 'df_' + res in data:
-            data['df_' + res] = data['df_' + res].append(pickle.load(infile)) 
-        else:
-            data['df_' + res] = pickle.load(infile)
-    elif analysis_periodtype == periodtype == 'Heatwave' and len(analysis_date) == 8 and start_day == analysis_date:
-        #Heatwave_20180715
-        data['df_' + res] = pickle.load(infile)
-    elif (analysis_periodtype == periodtype == 'Summer' or analysis_periodtype == periodtype == 'Year') and len(analysis_date) == 0:
-        #Summer
-        if 'df_' + res in data:
-            data['df_' + res] = data['df_' + res].append(pickle.load(infile)) 
-        else:
-            data['df_' + res] = pickle.load(infile)
-    elif (analysis_periodtype == periodtype == 'Summer' or analysis_periodtype == periodtype == 'Year') and len(analysis_date) == 4 and start_day[0:4] == analysis_date:
-        #Summer_2018
-        data['df_' + res] = pickle.load(infile)
-        
-    if (subset_periodtype == periodtype == 'Summer' or subset_periodtype == periodtype == 'Heatwave') and len(analysis_date) == 0:
-        #Subset_Heatwave
-        if 'df_' + res + '_sub' in data:
-            data['df_' + res + '_sub'] = data['df_' + res + '_sub'].append(pickle.load(infile)) 
-        else:
-            data['df_' + res + '_sub'] = pickle.load(infile)
-    elif (subset_periodtype == periodtype == 'Summer' or subset_periodtype == periodtype == 'Heatwave') and len(analysis_date) == 4 and start_day[0:4] == analysis_date:
-        #Subset_Heatwave_2018
-        if 'df_' + res + '_sub' in data:
-            data['df_' + res + '_sub'] = data['df_' + res + '_sub'].append(pickle.load(infile))
-        else:
-            data['df_' + res + '_sub'] = pickle.load(infile)
-    elif len(subset_periodtype) != 0 and len(analysis_date) == 8:
-        print('No subset available for this type.')
+    data['df_' + res] = pickle.load(infile)
     infile.close()
 
-#Unpack datasets from dictionairy
-df_d = data['df_d']
-df_h = data['df_h']
-if len(subset_periodtype) != 0:
-    df_d_sub = data['df_d_sub']
-    df_h_sub = data['df_h_sub']
+#Select years for analysis
+if len(analysis_year) == 0:
+    Years = range(start.year, end.year+1)
+else:
+    Years = [int(analysis_year)]
 
-#Give an analysis_date for titles later on
-if len(analysis_date) == 0:
-    analysis_date = 'All'
-    
+#Build dictionairy of all potential periods
+dct_periods = BuilderPeriods.BuilderPeriods(start, end)
+
+#For every possible time range of the selected periodtype
+for i in range(len(dct_periods[analysis_periodtype])):
+    #For every year in analysis
+        for year in Years:
+            #Check if the period falls within the analysis
+            if dct_periods[analysis_periodtype][i][0].year == year:
+                #Save the period in the dataframe
+                if 'df_d' not in locals():
+                    df_d = data['df_d'][(data['df_d'].index >= dct_periods[analysis_periodtype][i][0]) & (data['df_d'].index <= dct_periods[analysis_periodtype][i][-1])].copy()
+                    df_h = data['df_h'][(data['df_h'].index >= dct_periods[analysis_periodtype][i][0]) & (data['df_h'].index <= dct_periods[analysis_periodtype][i][-1])].copy()
+                else:
+                    df_d = df_d.append(data['df_d'][(data['df_d'].index >= dct_periods[analysis_periodtype][i][0]) & (data['df_d'].index <= dct_periods[analysis_periodtype][i][-1])].copy())
+                    df_h = df_h.append(data['df_h'][(data['df_h'].index >= dct_periods[analysis_periodtype][i][0]) & (data['df_h'].index <= dct_periods[analysis_periodtype][i][-1])].copy())
+                if len(subset_periodtype) != 0:
+                    if 'df_d_sub' not in locals():
+                        df_d_sub = data['df_d'][(data['df_d'].index >= dct_periods[subset_periodtype][i][0]) & (data['df_d'].index <= dct_periods[subset_periodtype][i][-1])].copy()
+                        df_h_sub = data['df_h'][(data['df_h'].index >= dct_periods[subset_periodtype][i][0]) & (data['df_h'].index <= dct_periods[subset_periodtype][i][-1])].copy()
+                    else:
+                        df_d_sub = df_d_sub.append(data['df_d'][(data['df_d'].index >= dct_periods[subset_periodtype][i][0]) & (data['df_d'].index <= dct_periods[subset_periodtype][i][-1])].copy())
+                        df_h_sub = df_h_sub.append(data['df_h'][(data['df_h'].index >= dct_periods[subset_periodtype][i][0]) & (data['df_h'].index <= dct_periods[subset_periodtype][i][-1])].copy())
+
+if Filter:
+    for Loc in df_d['Location'].unique():
+        df_d.loc[df_d['Location']==Loc, df_d.keys()], df_h.loc[df_h['Location']==Loc, df_h.keys()] = FilteringUHI.FilteringUHI(df_d.loc[df_d['Location']==Loc, df_d.keys()], df_h.loc[df_h['Location']==Loc, df_h.keys()])
+        
+        if len(subset_periodtype) != 0:
+            df_d_sub.loc[df_d_sub['Location']==Loc, df_d_sub.keys()], df_h_sub.loc[df_h_sub['Location']==Loc, df_h_sub.keys()] = FilteringUHI.FilteringUHI(df_d_sub.loc[df_d_sub['Location']==Loc, df_d_sub.keys()], df_h_sub.loc[df_h_sub['Location']==Loc, df_h_sub.keys()])
+            
+            
+            
 #%%###ANALYSIS###
 
 df_d['sm_cor'] = np.nan
@@ -172,8 +144,8 @@ if len(subset_periodtype) != 0:
 
 #Visualization total
 
-Visualization.Boxplot(cat='LCZ', dataframe=df_d, analysis_periodtype=analysis_periodtype, analysis_date=analysis_date)
-Visualization.Boxplot(cat='City', dataframe=df_d, analysis_periodtype=analysis_periodtype, analysis_date=analysis_date)
+Visualization.Boxplot(cat='LCZ', dataframe=df_d, analysis_periodtype=analysis_periodtype, analysis_year=analysis_year)
+Visualization.Boxplot(cat='City', dataframe=df_d, analysis_periodtype=analysis_periodtype, analysis_year=analysis_year)
 
 
 Visualization.Scatter(cat='DTR_rural', dataframe = df_d, analysis_name=analysis_name)
