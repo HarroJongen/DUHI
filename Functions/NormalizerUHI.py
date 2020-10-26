@@ -5,6 +5,7 @@
 
 def NormalizerUHI(start, end, stations, file):
     import pandas as pd
+    import numpy as np
     
     from Functions import DTRCalculator
     
@@ -56,6 +57,8 @@ def NormalizerUHI(start, end, stations, file):
         df_select['Norm'] = ((df_select_range['T']**3*df_select_sum['Q'])/df_select_mean['FH'])**0.25
         #Drop all rows without data to get daily data set
         df_select = df_select.dropna()
+        #All zeros na
+        df_select = df_select.replace(0, np.nan)
         
         #Save dataframe
         if Loc == 240:
