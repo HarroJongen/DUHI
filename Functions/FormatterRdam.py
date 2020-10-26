@@ -34,7 +34,7 @@ def FormatterRdam(start, end, file, overwrite = True):
         
         #Check if data is available in given period
         if len(df) == 0 :
-            print('No data available between ' + str(start) + ' and ' + str(end) + ' for Rotterdam location ' + file[15:-4])
+            print('No data available between ' + str(start) + ' and ' + str(end) + ' for Rotterdam location ' + file[22:-4])
             if os.path.isfile(filepath):
                 os.remove(filepath)
         else:
