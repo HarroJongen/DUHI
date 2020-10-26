@@ -12,7 +12,7 @@ def BuilderData(start, end, k_API = [0.85], Filter = True):
     import os
 
     #Import functions
-    from Functions import FormatterSIC, FormatterMocca, FormatterWOW, FormatterRdam, UrbanRuralCombiner, FormatterUrbanRural, FormatterBeijum, BuilderDaily, SatelliteToTimeseries, NormalizerUHI, FilteringUHI
+    from Functions import FormatterSIC, FormatterMocca, FormatterWOW, FormatterRdam, UrbanRuralCombiner, FormatterUrbanRural, FormatterBeijum, BuilderDaily, SatelliteToTimeseries, NormalizerUHI
     
     #%%###SETTINGS DATA###
     print('Loading settings')
