@@ -106,8 +106,11 @@ m.colorbar()
 df = pd.DataFrame(columns=['city', 'range_city', 'range_north', 'range_south', 'range_west', 'range_east'])
 #Create agent to retrieve coordinates
 geolocator = Nominatim(user_agent="DUHI")
+
 #For every city
-for city in ['Toulouse', 'Berlin', 'Hannover', 'Amsterdam', 'Rotterdam', 'London', 'Gent', 'Leuven', 'Boekarest', 'Enschede', 'Madrid', 'Barcelona', 'Rome', 'Milaan', 'Helsinki', 'Singapore']:
+cities = ['Toulouse', 'Berlin', 'Hannover', 'Amsterdam', 'Rotterdam', 'London', 'Gent', 'Leuven', 'Boekarest', 'Enschede', 'Madrid', 'Barcelona', 'Rome', 'Milaan', 'Helsinki', 'Singapore']
+# cities = ['Amsterdam', 'Rotterdam', 'Gent']
+for city in cities:
     print('Extracting satellite soil moisture data for ' + city)
     #Define location
     location = geolocator.geocode(city)
@@ -135,6 +138,8 @@ for city in ['Toulouse', 'Berlin', 'Hannover', 'Amsterdam', 'Rotterdam', 'London
     range_east = np.nanmax(df_east['sm']) - np.nanmin(df_east['sm'])
     df = df.append({'city': city, 'range_city': range_city, 'range_north' : range_north, 'range_south' : range_south, 'range_west' : range_west, 'range_east' : range_east}, ignore_index=True)
     winsound.Beep(440, 100)
+
+df.to_csv('Data/temp.csv')
 
 winsound.Beep(440, 1500)
 
