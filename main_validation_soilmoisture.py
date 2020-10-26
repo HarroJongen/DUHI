@@ -58,7 +58,7 @@ Veenk_df = Veenk_rs.join(Veenk_is, how = 'outer')
 ###VALIDATION###
 
 #Create dataframe for statistics
-Stats = pd.DataFrame(columns=['loc', 'var', 'MSE', 'MSE_s', 'MSE_u', 'RMSE', 'RMSE_s', 'RMSE_u', 'pearson_r'])
+Stats = pd.DataFrame(columns=['loc', 'var', 'MSE', 'MSE_s', 'MSE_u', 'RMSE', 'RMSE_s', 'RMSE_u', 'pearson_r', 'spearman_r'])
 
 #Calculate statistics
 Stats = ValStat.ValStat(Cabauw_df, 'sm', Stats, 'Cabauw')
