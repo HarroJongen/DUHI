@@ -13,8 +13,8 @@ def BuilderPeriods(start, end):
         dct[i] = []
     
     Heatwaves = pd.read_csv('Data/Metadata/HeatwavePeriods.csv')
-    Heatwaves['Start'] = pd.to_datetime(Heatwaves['Start'], format='%m/%d/%Y')
-    Heatwaves['End'] = pd.to_datetime(Heatwaves['End'], format='%m/%d/%Y')
+    Heatwaves['Start'] = pd.to_datetime(Heatwaves['Start'], format='%Y-%m-%d')
+    Heatwaves['End'] = pd.to_datetime(Heatwaves['End'], format='%Y-%m-%d')
 
     for year in range(start.year, end.year+1):
         dct['Year'] += [(datetime.datetime(year, 1, 1), datetime.datetime(year, 12, 31))]
