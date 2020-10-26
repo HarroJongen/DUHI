@@ -43,7 +43,7 @@ def BuilderDaily(file, k_API = [0.85]):
         UHI_norms = pd.read_csv('Data/UHI_Norms_' + City + '.csv')
         UHI_norms = UHI_norms.set_index('date')
         #Perform calculation
-        df_daily['Norm'] = UHI_norms['Norm']
+        df_daily = df_daily.join(UHI_norms)
     else:
         df_daily['Norm'] = np.nan
     
