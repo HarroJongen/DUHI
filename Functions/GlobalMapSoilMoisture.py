@@ -11,7 +11,7 @@ def GlobalMapSoilMoisture(filepath):
     nc = NetCDFFile(filepath)
     lats = nc.variables['lat'][:]
     lons = nc.variables['lon'][:]
-    sm = nc.variables['sm'][:]
+    sm = nc.variables['sm_range'][:]
     nc.close()
     m = Basemap(projection='kav7',lon_0=0,resolution='l')
     lon, lat = np.meshgrid(lons, lats)
@@ -19,3 +19,6 @@ def GlobalMapSoilMoisture(filepath):
     m.pcolor(xi,yi,np.squeeze(sm))
     m.drawcountries()
     m.drawcoastlines()
+    m.colorbar()
+
+    
