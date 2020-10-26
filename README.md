@@ -36,7 +36,7 @@ Before running the code create the folder stucture with the appropriate data:
 DUHI
 	-Data
 		-Cities
-			-Per city one folder with city name containing all urban files
+			-Per city one folder with city name containing all urban files, urban files can be downloaded at https://wow.knmi.nl/. Additionally, other projects can be added, see note for the projects for which formatting is available. Adapt the function DataBuilder the available data.
 			-Rural
 				-File for rural station of the city
 		-Maps
@@ -61,6 +61,8 @@ DUHI
 				-Follow download instructions at https://www.esa-soilmoisture-cci.org/node/145 for the combined product and place here
 	-Figures
 	-Functions (already exists in repository)
-	
+
+
+Note: the Functions folder contains functions for formatting data from the summer in the city in Amsterdam project from Wageningen University & Research request is needed, for RainGain in Rotterdam, downloaded at http://weather.tudelft.nl/csv/ and MOCCA fron Universiteit Gent, also on request.
 
 
