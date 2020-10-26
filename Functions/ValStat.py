@@ -44,13 +44,15 @@ def ValStat(data, observations, statistics, location):
             #Add RMSE_u (unsystematic Root Mean Square Error)
             ls.append([(math.sqrt(np.square(np.subtract(df[var],df[var + "_reg"])).mean()))])            
             #Add pearson's correlation
-            ls.append([df[observations].corr(df[var])])
+            ls.append([df[observations].corr(df[var], method='pearson')])            
+            #Add spearman's correlation
+            ls.append([df[observations].corr(df[var], method='spearman')])
         else:
-            ls = [[location], [var], [np.nan], [np.nan], [np.nan], [np.nan], [np.nan], [np.nan], [np.nan]]
+            ls = [[location], [var], [np.nan], [np.nan], [np.nan], [np.nan], [np.nan], [np.nan], [np.nan], [np.nan]]
         
         #Transform list to a dataframe and add to dataframe for statistics
         ls = np.array(ls)
         ls = ls.T
-        row = pd.DataFrame(ls, columns=['loc', 'var', 'MSE', 'MSE_s', 'MSE_u', 'RMSE', 'RMSE_s', 'RMSE_u', 'pearson_r'])
+        row = pd.DataFrame(ls, columns=['loc', 'var', 'MSE', 'MSE_s', 'MSE_u', 'RMSE', 'RMSE_s', 'RMSE_u', 'pearson_r', 'spearman_r'])
         statistics = statistics.append(row)
     return(statistics)
