@@ -45,7 +45,7 @@ BuilderData.BuilderData(start = start, end = end, k_API = k_API)
 #Optional suffixes:
     #_Subset (Followed by Heatwave, Summer or Year, adds extra dataframes as a subset for comparison)
     
-analysis_name = 'Year'
+analysis_name = 'Heatwave_2018'
 regex = re.compile(r'([A-Za-z]+)_?([0-9]*)_?S?u?b?s?e?t?_?([A-Za-z]*)_?([0-9]*)')
 analysis_periodtype = regex.search(analysis_name).group(1)
 analysis_year = regex.search(analysis_name).group(2)
