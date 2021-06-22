@@ -34,7 +34,7 @@ def NormalizerUHI(start, end, stations, file):
     df['FH'] = df['FH'] / 10
     
     #Transform global radiation to Km/s
-    df['Q'] = df['Q'] /3600 * 10000 / (1.225 * 1.00467)
+    df['Q'] = df['Q'] /3600 * 10000 / (1.225 * 1.00467) / 24
     
     
     for Loc in df['STN'].unique():
