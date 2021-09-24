@@ -23,7 +23,7 @@ def SatelliteToTimeseries(location, coordinates, start, end):
         #Define filepath
         filepath = ('Data/SoilMoisture/ESACCI-COMBINED/' + date.strftime('%Y') +\
                      '/ESACCI-SOILMOISTURE-L3S-SSMV-COMBINED-' + date.strftime('%Y')\
-                         + date.strftime('%m') + date.strftime('%d') + '000000-fv04.7.nc')        
+                         + date.strftime('%m') + date.strftime('%d') + '000000-fv06.1.nc')        
         #Check if file exists
         if os.path.isfile(filepath):
             #Open file
